@@ -183,7 +183,8 @@ def run_stream_demo():
     logger.info("=" * 60)
     logger.info("STREAM: Real-Time Event Simulator (30 seconds)")
     logger.info("=" * 60)
-    from pipeline.stream_simulator import LocalStreamSimulator, SlidingWindowAggregator
+    from pipeline.stream_simulator import (LocalStreamSimulator,
+                                           SlidingWindowAggregator)
 
     agg = SlidingWindowAggregator(window_seconds=60)
     sim = LocalStreamSimulator(events_per_second=5)
