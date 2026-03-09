@@ -3,14 +3,15 @@ Layer 1: RFM Customer Segmentation
 Recency–Frequency–Monetary scoring with K-Means dynamic clustering.
 """
 
-import pandas as pd
-import numpy as np
+import logging
 from datetime import datetime
-from sklearn.preprocessing import StandardScaler
+from pathlib import Path
+
+import numpy as np
+import pandas as pd
 from sklearn.cluster import KMeans
 from sklearn.metrics import silhouette_score
-import logging
-from pathlib import Path
+from sklearn.preprocessing import StandardScaler
 
 logger = logging.getLogger(__name__)
 

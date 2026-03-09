@@ -9,22 +9,20 @@ Run: python src/dashboard/app.py
 Open: http://localhost:8050
 """
 
-import pandas as pd
-import numpy as np
-import json
-import threading
-import time
-from pathlib import Path
-from datetime import datetime, timedelta
 import logging
-from typing import Optional, Dict, List, Tuple
+from datetime import datetime, timedelta
+from pathlib import Path
+from typing import Dict, List, Tuple
+
+import numpy as np
+import pandas as pd
 
 # ── Try to import Dash (may not be installed) ──────────────────────────────
 try:
     import dash
-    from dash import dcc, html, Input, Output, State, callback_context, ctx
-    import plotly.graph_objects as go
     import plotly.express as px
+    import plotly.graph_objects as go
+    from dash import Input, Output, State, callback_context, dcc, html
     from plotly.subplots import make_subplots
     DASH_AVAILABLE = True
 except ImportError:
@@ -170,7 +168,7 @@ def get_next_best_action(customer: pd.Series) -> str:
     recency = customer.get("recency", 999)
     frequency = customer.get("frequency", 0)
     monetary = customer.get("monetary", 0)
-    
+
     if segment == "Champions":
         return "Reward program / Early access"
     elif segment == "Loyal Customers":
@@ -198,12 +196,12 @@ def calculate_shap_like_importance(customer: pd.Series) -> Dict[str, float]:
     recency = customer.get("recency", 100)
     frequency = customer.get("frequency", 1)
     monetary = customer.get("monetary", 100)
-    
+
     # Simple heuristic-based importance
     recency_impact = (recency - 90) / 180 * 0.4  # Higher recency = higher churn
     freq_impact = (1 / max(frequency, 1) - 0.5) * 0.35  # Lower freq = higher churn
     monetary_impact = (1 - monetary / 2000) * 0.25  # Lower value = higher churn
-    
+
     return {
         "recency": round(recency_impact, 3),
         "frequency": round(freq_impact, 3),
@@ -213,28 +211,28 @@ def calculate_shap_like_importance(customer: pd.Series) -> Dict[str, float]:
 def generate_nlp_insights(daily: pd.DataFrame, master: pd.DataFrame, rfm: pd.DataFrame) -> List[str]:
     """Generate automated NLP-style insights."""
     insights = []
-    
+
     if len(daily) > 0:
         recent = daily.tail(30)
         older = daily.iloc[-60:-30] if len(daily) > 60 else daily.head(30)
-        
+
         if len(recent) > 0 and len(older) > 0:
             recent_avg = recent["total_revenue"].mean()
             older_avg = older["total_revenue"].mean()
             pct_change = ((recent_avg - older_avg) / older_avg * 100) if older_avg > 0 else 0
-            
+
             direction = "up" if pct_change > 0 else "down"
             insights.append(f"Revenue is {direction} {abs(pct_change):.1f}% vs previous period")
-    
+
     if len(master) > 0 and "customer_state" in master.columns:
         state_rev = master.groupby("customer_state")["total_order_value"].sum()
         top_state = state_rev.idxmax() if len(state_rev) > 0 else "N/A"
         insights.append(f"Top performing state: {top_state}")
-    
+
     if len(rfm) > 0:
         top_seg = rfm["segment"].value_counts().idxmax()
         insights.append(f"Largest segment: {top_seg} ({rfm['segment'].value_counts().max()} customers)")
-    
+
     return insights if insights else ["Run pipeline to generate insights"]
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -245,11 +243,11 @@ def build_revenue_chart(daily: pd.DataFrame, anomalies: pd.DataFrame = None,
     """Build revenue chart with anomaly detection and confidence intervals."""
     fig = make_subplots(rows=2, cols=1, shared_xaxes=True,
                         vertical_spacing=0.05, row_heights=[0.7, 0.3])
-    
+
     df = daily.copy()
     if date_range:
         df = df[(df["date"] >= date_range[0]) & (df["date"] <= date_range[1])]
-    
+
     # Revenue line
     fig.add_trace(go.Scatter(
         x=df["date"], y=df["total_revenue"],
@@ -257,7 +255,7 @@ def build_revenue_chart(daily: pd.DataFrame, anomalies: pd.DataFrame = None,
         line=dict(color=colors["primary"], width=2),
         fill="tozeroy", fillcolor=f"rgba(108,99,255,0.1)",
     ), row=1, col=1)
-    
+
     # Rolling average
     roll = df["total_revenue"].rolling(7).mean()
     fig.add_trace(go.Scatter(
@@ -265,7 +263,7 @@ def build_revenue_chart(daily: pd.DataFrame, anomalies: pd.DataFrame = None,
         name="7-Day MA", mode="lines",
         line=dict(color=colors["warning"], width=2, dash="dot"),
     ), row=1, col=1)
-    
+
     # Anomalies with confidence
     if anomalies is not None and len(anomalies) > 0:
         anom = anomalies[anomalies["is_anomaly"] == True]
@@ -282,7 +280,7 @@ def build_revenue_chart(daily: pd.DataFrame, anomalies: pd.DataFrame = None,
                     name=f"Anomaly ({row.get('anomaly_type', 'unknown')}: {confidence:.0%} conf)",
                     hovertext=f"Z-Score: {row.get('z_score', 0):.2f}<br>Severity: {row.get('anomaly_severity', 'N/A')}",
                 ), row=1, col=1)
-    
+
     # Z-score subplot
     if anomalies is not None and len(anomalies) > 0:
         fig.add_trace(go.Bar(
@@ -291,10 +289,10 @@ def build_revenue_chart(daily: pd.DataFrame, anomalies: pd.DataFrame = None,
                 lambda x: colors["danger"] if x < -2.5 else (colors["success"] if x > 2.5 else colors["subtext"])
             ),
         ), row=2, col=1)
-    
+
     fig.add_hline(y=2.5, line_dash="dot", line_color=colors["danger"], opacity=0.5, row=2, col=1)
     fig.add_hline(y=-2.5, line_dash="dot", line_color=colors["danger"], opacity=0.5, row=2, col=1)
-    
+
     fig.update_layout(
         title="Daily Revenue with Anomaly Detection",
         showlegend=True, height=450,
@@ -305,7 +303,7 @@ def build_revenue_chart(daily: pd.DataFrame, anomalies: pd.DataFrame = None,
     fig.update_xaxes(title="Date", row=2, col=1)
     fig.update_yaxes(title="Revenue (R$)", row=1, col=1)
     fig.update_yaxes(title="Z-Score", row=2, col=1)
-    
+
     return fig
 
 
@@ -368,7 +366,7 @@ def build_rfm_3d_scatter(rfm: pd.DataFrame, colors: Dict = DARK_COLORS) -> go.Fi
     if len(rfm) == 0:
         return go.Figure().add_annotation(text="No RFM data available",
                                           xref="paper", yref="paper", x=0.5, y=0.5, showarrow=False)
-    
+
     # Aggregate by segment for cleaner 3D view
     seg_summary = rfm.groupby("segment").agg(
         avg_recency=("recency", "mean"),
@@ -376,7 +374,7 @@ def build_rfm_3d_scatter(rfm: pd.DataFrame, colors: Dict = DARK_COLORS) -> go.Fi
         avg_monetary=("monetary", "mean"),
         count=("customer_id", "count"),
     ).reset_index()
-    
+
     fig = go.Figure(data=[go.Scatter3d(
         x=seg_summary["avg_recency"],
         y=seg_summary["avg_frequency"],
@@ -389,7 +387,7 @@ def build_rfm_3d_scatter(rfm: pd.DataFrame, colors: Dict = DARK_COLORS) -> go.Fi
         textposition="top center",
         hovertemplate="<b>%{text}</b><br>Recency: %{x:.0f}<br>Freq: %{y:.1f}<br>Monetary: R$%{z:.0f}<br>Customers: %{marker.size:.0f}<extra></extra>",
     )])
-    
+
     fig.update_layout(
         title="RFM 3D Segment Map",
         scene=dict(
@@ -401,7 +399,7 @@ def build_rfm_3d_scatter(rfm: pd.DataFrame, colors: Dict = DARK_COLORS) -> go.Fi
         height=500, margin=dict(l=20, r=20, t=40, b=20),
         paper_bgcolor=colors["card"], font=dict(color=colors["text"]),
     )
-    
+
     return fig
 
 
@@ -409,14 +407,14 @@ def build_forecast_chart(daily: pd.DataFrame, forecast: pd.DataFrame,
                          colors: Dict = DARK_COLORS) -> go.Figure:
     """Build forecast chart with historical overlay and confidence intervals."""
     fig = go.Figure()
-    
+
     # Historical
     fig.add_trace(go.Scatter(
         x=daily["date"], y=daily["total_revenue"],
         name="Historical", mode="lines",
         line=dict(color=colors["info"], width=2),
     ))
-    
+
     if len(forecast) > 0:
         # CI band
         fig.add_trace(go.Scatter(
@@ -431,7 +429,7 @@ def build_forecast_chart(daily: pd.DataFrame, forecast: pd.DataFrame,
             name="Ensemble Forecast", mode="lines",
             line=dict(color=colors["primary"], width=3, dash="dash"),
         ))
-        
+
         # SARIMA and GBM individual forecasts
         if "sarima_forecast" in forecast.columns:
             fig.add_trace(go.Scatter(
@@ -456,7 +454,7 @@ def build_forecast_chart(daily: pd.DataFrame, forecast: pd.DataFrame,
         font=dict(color=colors["text"], family="Inter, Arial"),
         margin=dict(l=40, r=20, t=40, b=40),
     )
-    
+
     return fig
 
 
@@ -465,7 +463,7 @@ def build_cohort_heatmap(cohort_df: pd.DataFrame, colors: Dict = DARK_COLORS) ->
     if len(cohort_df) == 0:
         return go.Figure().add_annotation(text="No cohort data available",
                                           xref="paper", yref="paper", x=0.5, y=0.5, showarrow=False)
-    
+
     cols_to_show = [c for c in cohort_df.columns if str(c).isdigit()][:13]
     z = cohort_df[cols_to_show].values
     y = [str(i) for i in cohort_df.index]
@@ -479,7 +477,7 @@ def build_cohort_heatmap(cohort_df: pd.DataFrame, colors: Dict = DARK_COLORS) ->
         showscale=True,
         colorbar=dict(title="Retention %", tickfont=dict(color=colors["text"])),
     ))
-    
+
     fig.update_layout(
         title="Cohort Retention Heatmap (%)",
         xaxis_title="Months Since First Purchase",
@@ -488,7 +486,7 @@ def build_cohort_heatmap(cohort_df: pd.DataFrame, colors: Dict = DARK_COLORS) ->
         paper_bgcolor=colors["card"], font=dict(color=colors["text"]),
         margin=dict(l=60, r=20, t=40, b=40),
     )
-    
+
     return fig
 
 
@@ -514,13 +512,13 @@ def build_category_treemap(master: pd.DataFrame, colors: Dict = DARK_COLORS) -> 
         title="Product Category Revenue Breakdown",
         color="revenue", color_continuous_scale="Viridis",
     )
-    
+
     fig.update_layout(
         height=500,
         paper_bgcolor=colors["card"], font=dict(color=colors["text"]),
         margin=dict(l=20, r=20, t=40, b=20),
     )
-    
+
     return fig
 
 
@@ -528,7 +526,7 @@ def build_segment_bar(rfm: pd.DataFrame, colors: Dict = DARK_COLORS) -> go.Figur
     """Build revenue and customer count by segment bar chart."""
     if len(rfm) == 0:
         return go.Figure()
-    
+
     seg = rfm.groupby("segment").agg(
         count=("customer_id", "count"),
         revenue=("monetary", "sum"),
@@ -543,14 +541,14 @@ def build_segment_bar(rfm: pd.DataFrame, colors: Dict = DARK_COLORS) -> go.Figur
         y=seg["segment"], x=seg["count"], name="Customers",
         mode="markers+lines", marker=dict(color=colors["warning"], size=10, line=dict(width=2)),
     ), secondary_y=True)
-    
+
     fig.update_layout(
         title="Revenue & Customer Count by Segment",
         height=400,
         paper_bgcolor=colors["card"], font=dict(color=colors["text"]),
         margin=dict(l=40, r=20, t=40, b=40),
     )
-    
+
     return fig
 
 
@@ -559,23 +557,23 @@ def build_payment_mix(payments: pd.DataFrame, colors: Dict = DARK_COLORS) -> go.
     if len(payments) == 0 or "payment_type" not in payments.columns:
         return go.Figure().add_annotation(text="No payment data available",
                                           xref="paper", yref="paper", x=0.5, y=0.5, showarrow=False)
-    
+
     payment_counts = payments["payment_type"].value_counts().reset_index()
     payment_counts.columns = ["payment_type", "count"]
-    
+
     fig = px.pie(
         payment_counts, values="count", names="payment_type",
         title="Payment Method Distribution",
         color_discrete_sequence=px.colors.qualitative.Set2,
     )
-    
+
     fig.update_traces(textposition="inside", textinfo="percent+label")
     fig.update_layout(
         height=400,
         paper_bgcolor=colors["card"], font=dict(color=colors["text"]),
         margin=dict(l=20, r=20, t=40, b=20),
     )
-    
+
     return fig
 
 
@@ -584,18 +582,18 @@ def build_churn_trend(churn_df: pd.DataFrame, master: pd.DataFrame, colors: Dict
     if len(master) == 0 or "order_purchase_timestamp" not in master.columns:
         return go.Figure().add_annotation(text="No data for churn trend",
                                           xref="paper", yref="paper", x=0.5, y=0.5, showarrow=False)
-    
+
     # Calculate monthly churn
     master["month"] = master["order_purchase_timestamp"].dt.to_period("M").astype(str)
     monthly = master.groupby("month").agg(
         customers=("customer_id", "nunique"),
         orders=("order_id", "count"),
     ).reset_index()
-    
+
     # Simple churn calculation: customers who haven't ordered in last 90 days
     monthly["churn_rate"] = (monthly["orders"].shift(1) - monthly["orders"]).clip(lower=0) / monthly["customers"].clip(lower=1) * 100
     monthly["churn_rate"] = monthly["churn_rate"].fillna(0).clip(upper=100)
-    
+
     fig = go.Figure()
     fig.add_trace(go.Scatter(
         x=monthly["month"], y=monthly["churn_rate"],
@@ -603,7 +601,7 @@ def build_churn_trend(churn_df: pd.DataFrame, master: pd.DataFrame, colors: Dict
         line=dict(color=colors["danger"], width=2),
         fill="tozeroy", fillcolor="rgba(231,76,60,0.1)",
     ))
-    
+
     fig.update_layout(
         title="Monthly Churn Rate Trend",
         xaxis_title="Month", yaxis_title="Churn Rate (%)",
@@ -611,7 +609,7 @@ def build_churn_trend(churn_df: pd.DataFrame, master: pd.DataFrame, colors: Dict
         paper_bgcolor=colors["card"], font=dict(color=colors["text"]),
         margin=dict(l=40, r=20, t=40, b=40),
     )
-    
+
     return fig
 
 
@@ -620,7 +618,7 @@ def build_top_products(master: pd.DataFrame, colors: Dict = DARK_COLORS) -> go.F
     if len(master) == 0:
         return go.Figure().add_annotation(text="No product data available",
                                           xref="paper", yref="paper", x=0.5, y=0.5, showarrow=False)
-    
+
     # Group by product if available
     if "product_id" in master.columns:
         product_stats = master.groupby("product_id").agg(
@@ -629,7 +627,7 @@ def build_top_products(master: pd.DataFrame, colors: Dict = DARK_COLORS) -> go.F
         ).reset_index().sort_values("revenue", ascending=False).head(10)
     else:
         product_stats = pd.DataFrame()
-    
+
     fig = go.Figure(data=[go.Table(
         header=dict(values=["Product ID", "Revenue (R$)", "Orders"],
                     fill_color=colors["primary"], align="left", font=dict(color="white")),
@@ -639,14 +637,14 @@ def build_top_products(master: pd.DataFrame, colors: Dict = DARK_COLORS) -> go.F
             product_stats["orders"],
         ], fill_color=colors["card"], font=dict(color=colors["text"])),
     )])
-    
+
     fig.update_layout(
         title="Top 10 Products by Revenue",
         height=350,
         paper_bgcolor=colors["card"], font=dict(color=colors["text"]),
         margin=dict(l=20, r=20, t=40, b=20),
     )
-    
+
     return fig
 
 
@@ -655,10 +653,10 @@ def build_sentiment_gauge(reviews: pd.DataFrame, colors: Dict = DARK_COLORS) -> 
     if len(reviews) == 0 or "review_score" not in reviews.columns:
         return go.Figure().add_annotation(text="No review data",
                                           xref="paper", yref="paper", x=0.5, y=0.5, showarrow=False)
-    
+
     avg_score = reviews["review_score"].mean()
     sentiment = (avg_score - 3) / 2  # Normalize to -1 to 1
-    
+
     fig = go.Figure(go.Indicator(
         mode="gauge+number+delta",
         value=sentiment,
@@ -678,13 +676,13 @@ def build_sentiment_gauge(reviews: pd.DataFrame, colors: Dict = DARK_COLORS) -> 
             ],
         },
     ))
-    
+
     fig.update_layout(
         height=250,
         paper_bgcolor=colors["card"], font=dict(color=colors["text"]),
         margin=dict(l=20, r=20, t=30, b=20),
     )
-    
+
     return fig
 
 
@@ -692,7 +690,7 @@ def build_geo_bar(master: pd.DataFrame, colors: Dict = DARK_COLORS) -> go.Figure
     """Build revenue by state bar chart."""
     if len(master) == 0 or "customer_state" not in master.columns:
         return go.Figure()
-    
+
     state_rev = master.groupby("customer_state")["total_order_value"].sum().reset_index()
     state_rev.columns = ["state", "revenue"]
     state_rev = state_rev.sort_values("revenue", ascending=True)
@@ -702,13 +700,13 @@ def build_geo_bar(master: pd.DataFrame, colors: Dict = DARK_COLORS) -> go.Figure
         title="Revenue by State",
         color="revenue", color_continuous_scale="Blues",
     )
-    
+
     fig.update_layout(
         height=400,
         paper_bgcolor=colors["card"], font=dict(color=colors["text"]),
         margin=dict(l=60, r=20, t=40, b=40),
     )
-    
+
     return fig
 
 
@@ -756,24 +754,24 @@ def create_layout() -> html.Div:
     master = loader.master
     rfm_df = loader.rfm
     anom_df = loader.anomalies
-    churn_df = loader.churn
-    reviews_df = loader.reviews
-    payments_df = loader.payments
+    loader.churn
+    loader.reviews
+    loader.payments
 
     # Calculate enhanced KPIs
     total_rev = f"R${daily['total_revenue'].sum()/1e6:.2f}M" if len(daily) > 0 else "N/A"
     total_ord = f"{master['order_id'].nunique():,}" if "order_id" in master.columns else "N/A"
     avg_ord = f"R${daily['avg_order_value'].mean():.0f}" if len(daily) > 0 else "N/A"
-    n_seg = str(rfm_df["segment"].nunique()) if len(rfm_df) > 0 else "N/A"
+    str(rfm_df["segment"].nunique()) if len(rfm_df) > 0 else "N/A"
     n_anom = str(anom_df["is_anomaly"].sum()) if "is_anomaly" in anom_df.columns else "0"
-    
+
     # LTV calculation
     if len(rfm_df) > 0:
         avg_ltv = rfm_df["monetary"].mean() * rfm_df["frequency"].mean()
         ltv_value = f"R${avg_ltv:,.0f}"
     else:
         ltv_value = "N/A"
-    
+
     # Repeat purchase rate
     if len(master) > 0:
         customer_orders = master.groupby("customer_id")["order_id"].count()
@@ -806,7 +804,7 @@ def create_layout() -> html.Div:
 
         # Auto-refresh
         dcc.Interval(id="interval-refresh", interval=30_000, n_intervals=0),
-        
+
         # Theme store
         dcc.Store(id="theme-store", data="dark"),
 
@@ -838,7 +836,7 @@ def create_layout() -> html.Div:
                     html.Label("Segment Filter:", style={"color": DARK_COLORS["subtext"], "fontSize": "12px", "marginRight": "8px"}),
                     dcc.Dropdown(
                         id="segment-filter",
-                        options=[{"label": "All Segments", "value": "all"}] + 
+                        options=[{"label": "All Segments", "value": "all"}] +
                                 [{"label": s, "value": s} for s in rfm_df["segment"].unique()] if len(rfm_df) > 0 else [],
                         value="all",
                         style={"width": "200px", "background": DARK_COLORS["card"], "border": f"1px solid {DARK_COLORS['border']}"},
@@ -920,7 +918,7 @@ def create_app() -> "dash.Dash":
         ctx = callback_context
         if not ctx.triggered:
             return html.Div("Loading...", style={"color": DARK_COLORS["text"]})
-        
+
         daily = loader.daily_revenue
         master = loader.master
         rfm_df = loader.rfm
@@ -1038,10 +1036,10 @@ def create_app() -> "dash.Dash":
         elif tab == "ai":
             # AI Insights Tab
             insights = generate_nlp_insights(daily, master, rfm_df)
-            
+
             # Customer detail for search
-            customer_detail = html.Div()
-            
+            html.Div()
+
             return html.Div([
                 # NLP Insights
                 html.Div([
@@ -1049,13 +1047,13 @@ def create_app() -> "dash.Dash":
                     html.Ul([html.Li(insight, style={"color": DARK_COLORS["text"], "marginBottom": "8px"})
                             for insight in insights]),
                 ], style={**card_style, "padding": "24px"}),
-                
+
                 # Sentiment Gauge
                 html.Div([
                     dcc.Graph(figure=build_sentiment_gauge(reviews_df, DARK_COLORS),
                               style={"height": "250px"}),
                 ], style=card_style),
-                
+
                 # What-If Simulator
                 html.Div([
                     html.H4("🎮 What-If Simulator", style={"color": DARK_COLORS["text"], "marginBottom": "16px"}),
@@ -1076,7 +1074,7 @@ def create_app() -> "dash.Dash":
                         "borderRadius": "8px", "textAlign": "center",
                     }),
                 ], style={**card_style, "padding": "24px"}),
-                
+
                 # Customer Detail Panel
                 html.Div([
                     html.H4("🔍 Customer Detail", style={"color": DARK_COLORS["text"], "marginBottom": "16px"}),
@@ -1100,13 +1098,13 @@ def create_app() -> "dash.Dash":
         daily = loader.daily_revenue
         if len(daily) == 0:
             return html.P("Run pipeline first", style={"color": DARK_COLORS["subtext"]})
-        
+
         base_revenue = daily["total_revenue"].sum()
         new_aov = 1 + aov_change / 100
         new_volume = 1 + volume_change / 100
         new_revenue = base_revenue * new_aov * new_volume
         delta = new_revenue - base_revenue
-        
+
         return html.Div([
             html.P(f"Projected Revenue: ", style={"display": "inline", "color": DARK_COLORS["subtext"]}),
             html.H3(f"R${new_revenue:,.0f}", style={"display": "inline", "color": DARK_COLORS["primary"], "marginLeft": "8px"}),
@@ -1122,24 +1120,24 @@ def create_app() -> "dash.Dash":
     def show_customer_detail(customer_id):
         if not customer_id:
             return html.P("Search for a customer to see details", style={"color": DARK_COLORS["subtext"]})
-        
+
         master = loader.master
         rfm_df = loader.rfm
-        
+
         if len(master) == 0 or len(rfm_df) == 0:
             return html.P("Run pipeline first", style={"color": DARK_COLORS["subtext"]})
-        
+
         # Find customer
         customer_orders = master[master["customer_id"] == customer_id]
         customer_rfm = rfm_df[rfm_df["customer_id"] == customer_id]
-        
+
         if len(customer_orders) == 0:
             return html.P(f"Customer {customer_id} not found", style={"color": DARK_COLORS["danger"]})
-        
+
         # Get customer stats
         total_spent = customer_orders["total_order_value"].sum()
         order_count = len(customer_orders)
-        
+
         # SHAP-like importance
         if len(customer_rfm) > 0:
             shap = calculate_shap_like_importance(customer_rfm.iloc[0])
@@ -1147,19 +1145,19 @@ def create_app() -> "dash.Dash":
         else:
             shap = {"recency": 0, "frequency": 0, "monetary": 0}
             next_action = "N/A"
-        
+
         return html.Div([
             html.Div([
                 html.P(f"Customer: {customer_id}", style={"color": DARK_COLORS["text"], "fontWeight": "bold"}),
                 html.P(f"Total Orders: {order_count}", style={"color": DARK_COLORS["subtext"]}),
                 html.P(f"Total Spent: R${total_spent:,.0f}", style={"color": DARK_COLORS["success"]}),
             ], style={"display": "flex", "gap": "24px", "marginBottom": "16px"}),
-            
+
             html.Div([
                 html.P("🎯 Next Best Action:", style={"color": DARK_COLORS["text"], "fontWeight": "bold", "marginBottom": "8px"}),
                 html.P(next_action, style={"color": DARK_COLORS["primary"]}),
             ], style={"marginBottom": "16px"}),
-            
+
             html.Div([
                 html.P("⚖️ Churn Risk Factors:", style={"color": DARK_COLORS["text"], "fontWeight": "bold", "marginBottom": "8px"}),
                 html.Div([
@@ -1196,11 +1194,11 @@ def create_app() -> "dash.Dash":
         anom_df = loader.anomalies
         if len(anom_df) == 0 or "is_anomaly" not in anom_df.columns:
             return []
-        
+
         recent_anomalies = anom_df[anom_df["is_anomaly"] == True].tail(3)
         if len(recent_anomalies) == 0:
             return []
-        
+
         alerts = []
         for _, row in recent_anomalies.iterrows():
             alert_type = "spike" if row.get("anomaly_type") == "spike" else "drop"
@@ -1218,7 +1216,7 @@ def create_app() -> "dash.Dash":
                 "display": "flex", "alignItems": "center",
                 "boxShadow": "0 2px 8px rgba(0,0,0,0.2)",
             }))
-        
+
         return alerts
 
     @app.callback(
@@ -1278,7 +1276,7 @@ try:
     daily = load(RAW / "daily_revenue_summary.csv", parse_dates=["date"])
     master = load(PROC / "master_dataset.csv", parse_dates=["order_purchase_timestamp"])
     rfm = load(PROC / "rfm_segments.csv")
-    
+
     col1.metric("Revenue", f"R${daily.total_revenue.sum()/1e6:.1f}M", "+12%")
     col2.metric("Orders", f"{master.order_id.nunique():,}", "+8%")
     col3.metric("AOV", f"R${daily.avg_order_value.mean():.0f}", "+3%")
@@ -1293,16 +1291,16 @@ if section == "Revenue & Anomalies":
     try:
         daily = load(RAW / "daily_revenue_summary.csv", parse_dates=["date"])
         anom = load(PROC / "anomaly_detection.csv", parse_dates=["date"])
-        
+
         fig = go.Figure()
         fig.add_scatter(x=daily.date, y=daily.total_revenue, name="Revenue",
                         line=dict(color="#6C63FF", width=2), fill="tozeroy")
         fig.add_scatter(x=daily.date, y=daily.total_revenue.rolling(7).mean(),
                         name="7-Day MA", line=dict(color="#F39C12", width=2, dash="dot"))
-        
+
         spikes = anom[(anom.is_anomaly==True) & (anom.anomaly_type=="spike")]
         drops = anom[(anom.is_anomaly==True) & (anom.anomaly_type=="drop")]
-        
+
         if len(spikes):
             spike_data = daily[daily.date.isin(spikes.date)]
             fig.add_scatter(x=spike_data.date, y=spike_data.total_revenue, mode="markers",
@@ -1311,7 +1309,7 @@ if section == "Revenue & Anomalies":
             drop_data = daily[daily.date.isin(drops.date)]
             fig.add_scatter(x=drop_data.date, y=drop_data.total_revenue, mode="markers",
                             name="Drop", marker=dict(color="#E74C3C", size=12, symbol="triangle-down"))
-        
+
         st.plotly_chart(fig, use_container_width=True)
         st.dataframe(anom[anom.is_anomaly][["date", "total_revenue", "z_score", "anomaly_type", "anomaly_severity"]].head(20))
     except Exception as e:
@@ -1322,7 +1320,7 @@ elif section == "30-Day Forecast":
     try:
         daily = load(RAW / "daily_revenue_summary.csv", parse_dates=["date"])
         forecast = load(PROC / "revenue_forecast.csv", parse_dates=["date"])
-        
+
         fig = go.Figure()
         fig.add_scatter(x=daily.date, y=daily.total_revenue, name="Historical", line=dict(color="#3498DB", width=2))
         fig.add_scatter(x=forecast.date, y=forecast.ensemble_forecast, name="Forecast",
@@ -1332,7 +1330,7 @@ elif section == "30-Day Forecast":
                         fill="toself", fillcolor="rgba(108,99,255,0.15)", line=dict(color="rgba(0,0,0,0)"),
                         name="80% CI")
         st.plotly_chart(fig, use_container_width=True)
-        
+
         col1, col2 = st.columns(2)
         col1.metric("Next 7 Days", f"R${forecast.ensemble_forecast.head(7).sum():,.0f}")
         col2.metric("Next 30 Days", f"R${forecast.ensemble_forecast.sum():,.0f}")
@@ -1347,7 +1345,7 @@ elif section == "RFM 3D Segments":
             r=("recency", "mean"), f=("frequency", "mean"), m=("monetary", "mean"),
             count=("customer_id", "count")
         ).reset_index()
-        
+
         fig = px.scatter_3d(seg, x="r", y="f", z="m", size="count", color="segment",
                             text="segment", title="RFM 3D Map")
         st.plotly_chart(fig, use_container_width=True)
@@ -1359,7 +1357,7 @@ elif section == "Cohort Retention":
     try:
         cohort = pd.read_csv(PROC / "cohort_retention.csv", index_col=0)
         cols = [c for c in cohort.columns if str(c).isdigit()][:13]
-        
+
         fig = go.Figure(data=go.Heatmap(
             z=cohort[cols].values,
             x=[f"M+{c}" for c in cols],
@@ -1377,7 +1375,7 @@ elif section == "Geo Map":
     try:
         master = load(PROC / "master_dataset.csv", parse_dates=["order_purchase_timestamp"])
         state_rev = master.groupby("customer_state").total_order_value.sum().reset_index()
-        
+
         # Add coordinates
         BRAZIL_COORDS = {
             "AC": (-9.0, -70.5), "AL": (-9.5, -36.5), "AP": (0.5, -52.0), "AM": (-3.5, -65.0),
@@ -1390,7 +1388,7 @@ elif section == "Geo Map":
         }
         state_rev["lat"] = state_rev["customer_state"].map(lambda s: BRAZIL_COORDS.get(s, (0, 0))[0])
         state_rev["lon"] = state_rev["customer_state"].map(lambda s: BRAZIL_COORDS.get(s, (0, 0))[1])
-        
+
         fig = go.Figure()
         fig.add_trace(go.Scattergeo(
             lon=state_rev["lon"], lat=state_rev["lat"],
@@ -1419,7 +1417,7 @@ elif section == "Products":
         items = load(RAW / "olist_order_items_dataset.csv")
         products = load(RAW / "olist_products_dataset.csv")
         df = items.merge(products[["product_id", "product_category_name"]], on="product_id")
-        
+
         col1, col2 = st.columns(2)
         with col1:
             cat_rev = df.groupby("product_category_name").price.sum().nlargest(15).reset_index()
@@ -1440,27 +1438,27 @@ elif section == "AI Insights":
         master = load(PROC / "master_dataset.csv", parse_dates=["order_purchase_timestamp"])
         rfm = load(PROC / "rfm_segments.csv")
         reviews = load(RAW / "olist_order_reviews_dataset.csv")
-        
+
         # Auto insights
         recent = daily.tail(30).total_revenue.mean()
         older = daily.iloc[-60:-30].total_revenue.mean() if len(daily) > 60 else daily.head(30).total_revenue.mean()
         pct = ((recent - older) / older * 100) if older > 0 else 0
-        
+
         st.info(f"Revenue is {'up' if pct > 0 else 'down'} {abs(pct):.1f}% vs previous period")
         st.success(f"Top state: {master.groupby('customer_state').total_order_value.sum().idxmax()}")
         st.warning(f"Largest segment: {rfm.segment.value_counts().idxmax()}")
-        
+
         # Sentiment
         avg_score = reviews.review_score.mean()
         sentiment = (avg_score - 3) / 2
         st.metric("Customer Sentiment", f"{sentiment:.2f}", delta=f"{avg_score:.1f}/5 avg review")
-        
+
         # What-if
         st.subheader("What-If Simulator")
         col1, col2 = st.columns(2)
         aov_change = col1.slider("AOV Change (%)", -20, 50, 10)
         vol_change = col2.slider("Volume Change (%)", -30, 50, 0)
-        
+
         base = daily.total_revenue.sum()
         new_rev = base * (1 + aov_change/100) * (1 + vol_change/100)
         st.metric("Projected Revenue", f"R${new_rev:,.0f}", delta=f"R${new_rev - base:,.0f}")

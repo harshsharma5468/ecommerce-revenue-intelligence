@@ -9,8 +9,9 @@ Usage:
     python main_pipeline.py --stream         # Start stream simulator
 """
 
-import sys
 import os
+import sys
+
 # Force UTF-8 encoding for Windows console
 if sys.platform == 'win32':
     os.environ['PYTHONIOENCODING'] = 'utf-8'
@@ -21,8 +22,8 @@ import argparse
 import logging
 import sys
 import time
-from pathlib import Path
 from datetime import datetime
+from pathlib import Path
 
 logging.basicConfig(
     level=logging.INFO,
@@ -57,7 +58,6 @@ def run_rfm(master):
     logger.info("=" * 60)
     logger.info("LAYER 1: RFM Customer Segmentation")
     logger.info("=" * 60)
-    import pandas as pd
     from models.rfm_segmentation import RFMAnalyzer
 
     ref_date = master["order_purchase_timestamp"].max()
@@ -80,6 +80,7 @@ def run_anomaly_detection():
     logger.info("LAYER 2: Anomaly Detection | LAYER 5: Root Cause")
     logger.info("=" * 60)
     import pandas as pd
+
     from models.anomaly_detection import AnomalyDetector, RootCauseAttributor
 
     raw_dir   = BASE_DIR / "data" / "raw"
@@ -123,6 +124,7 @@ def run_forecasting():
     logger.info("LAYER 3: 30-Day Revenue Forecast (SARIMA + GBM)")
     logger.info("=" * 60)
     import pandas as pd
+
     from models.revenue_forecasting import EnsembleForecaster
 
     raw_dir  = BASE_DIR / "data" / "raw"
@@ -150,11 +152,11 @@ def run_cohort(master):
     logger.info("=" * 60)
     logger.info("LAYER 4: Cohort Retention + Churn Prediction")
     logger.info("=" * 60)
-    from models.cohort_retention import CohortAnalyzer, ChurnPredictor
+    from models.cohort_retention import ChurnPredictor, CohortAnalyzer
 
     cohort = CohortAnalyzer()
     ret    = cohort.compute(master)
-    ltv    = cohort.compute_ltv(master)
+    cohort.compute_ltv(master)
     cohort.save()
 
     stats = cohort.get_summary_stats()
@@ -222,10 +224,10 @@ def run_all():
     logger.info("=" * 60 + "\n")
 
     master = run_ingestion()
-    rfm    = run_rfm(master)
-    anom   = run_anomaly_detection()
-    fc     = run_forecasting()
-    cohort = run_cohort(master)
+    run_rfm(master)
+    run_anomaly_detection()
+    run_forecasting()
+    run_cohort(master)
 
     elapsed = time.time() - start
     logger.info("\n" + "=" * 60)

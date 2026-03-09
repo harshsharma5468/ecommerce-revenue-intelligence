@@ -3,17 +3,16 @@ Data Ingestion Pipeline
 Loads, validates, and merges the Olist e-commerce datasets.
 """
 
-import pandas as pd
-import numpy as np
-import os
 import logging
 from pathlib import Path
-from datetime import datetime
+
+import pandas as pd
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 logger = logging.getLogger(__name__)
 
-from src.config import DATA_DIR, PROCESSED_DIR as _PROC
+from src.config import DATA_DIR
+
 DATA_DIR = DATA_DIR
 PROCESSED_DIR = Path(__file__).resolve().parents[2] / "data" / "processed"
 

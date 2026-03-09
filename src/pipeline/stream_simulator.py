@@ -5,16 +5,17 @@ Replace the LocalStreamSimulator with KafkaProducer for production use.
 """
 
 import json
-import time
+import logging
+import queue
 import random
 import threading
-import queue
+import time
 from datetime import datetime, timedelta
-from typing import Callable, Optional
-import logging
-import pandas as pd
-import numpy as np
 from pathlib import Path
+from typing import Callable, Optional
+
+import numpy as np
+import pandas as pd
 
 logger = logging.getLogger(__name__)
 
@@ -46,7 +47,7 @@ class LocalStreamSimulator:
     """
     Simulates a real-time event stream without Kafka.
     Replays historical Olist transactions with configurable speed.
-    
+
     Usage:
         sim = LocalStreamSimulator(speed_multiplier=10)
         sim.subscribe(my_handler)
@@ -178,7 +179,7 @@ class KafkaStreamProducer:
     Production Kafka producer. Requires:
         pip install kafka-python
         Kafka broker running at KAFKA_BROKER
-    
+
     Usage:
         producer = KafkaStreamProducer(broker="localhost:9092", topic="orders")
         producer.send_event(event_dict)
@@ -215,7 +216,7 @@ class KafkaStreamProducer:
 class KafkaStreamConsumer:
     """
     Production Kafka consumer.
-    
+
     Usage:
         consumer = KafkaStreamConsumer(broker="localhost:9092", topic="orders")
         for event in consumer.events():

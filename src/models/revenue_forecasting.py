@@ -6,14 +6,15 @@ Ensemble of:
   - Simple Exponential Smoothing baseline
 """
 
-import pandas as pd
-import numpy as np
+import logging
 import warnings
 from pathlib import Path
+
+import numpy as np
+import pandas as pd
 from sklearn.ensemble import GradientBoostingRegressor
-from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import mean_absolute_error, mean_squared_error
-import logging
+from sklearn.preprocessing import StandardScaler
 
 warnings.filterwarnings("ignore")
 logger = logging.getLogger(__name__)

@@ -3,10 +3,10 @@ Layer 4: Cohort Retention Analysis
 Month-over-month retention heatmaps and LTV calculation.
 """
 
-import pandas as pd
-import numpy as np
-from pathlib import Path
 import logging
+from pathlib import Path
+
+import pandas as pd
 
 logger = logging.getLogger(__name__)
 
@@ -189,7 +189,6 @@ class ChurnPredictor:
 
     def fit(self, features_df: pd.DataFrame) -> dict:
         from sklearn.model_selection import StratifiedKFold, cross_val_score
-        from sklearn.metrics import roc_auc_score
 
         X = features_df[self.feature_cols].fillna(0)
         y = features_df["is_churned"]
