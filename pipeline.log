@@ -1,0 +1,900 @@
+2026-03-09 17:13:57,509 [INFO] main_pipeline: E-Commerce Revenue Intelligence Pipeline — Full Run
+2026-03-09 17:13:57,509 [INFO] main_pipeline: ============================================================
+2026-03-09 17:13:57,509 [INFO] main_pipeline: LAYER 0: Data Ingestion
+2026-03-09 17:13:57,509 [INFO] main_pipeline: ============================================================
+2026-03-09 17:14:00,626 [INFO] pipeline.data_ingestion: Loaded 'orders': 15,000 rows × 8 cols
+2026-03-09 17:14:00,710 [INFO] pipeline.data_ingestion: Loaded 'customers': 3,000 rows × 6 cols
+2026-03-09 17:14:00,843 [INFO] pipeline.data_ingestion: Loaded 'order_items': 25,274 rows × 7 cols
+2026-03-09 17:14:00,911 [INFO] pipeline.data_ingestion: Loaded 'payments': 15,000 rows × 5 cols
+2026-03-09 17:14:01,038 [INFO] pipeline.data_ingestion: Loaded 'reviews': 11,963 rows × 7 cols
+2026-03-09 17:14:01,068 [INFO] pipeline.data_ingestion: Loaded 'products': 800 rows × 10 cols
+2026-03-09 17:14:01,089 [INFO] pipeline.data_ingestion: Loaded 'sellers': 400 rows × 5 cols
+2026-03-09 17:14:01,143 [INFO] pipeline.data_ingestion: Loaded 'geolocation': 5,000 rows × 5 cols
+2026-03-09 17:14:01,160 [INFO] pipeline.data_ingestion: Loaded 'category_translation': 15 rows × 2 cols
+2026-03-09 17:14:01,191 [INFO] pipeline.data_ingestion: Loaded 'daily_revenue': 972 rows × 7 cols
+2026-03-09 17:14:01,259 [INFO] pipeline.data_ingestion: Master dataset built: 15,000 rows × 29 cols
+2026-03-09 17:14:01,560 [INFO] pipeline.data_ingestion: Saved to D:\data\processed\master_dataset.csv
+2026-03-09 17:14:01,610 [INFO] main_pipeline: Master dataset: (15000, 29)
+2026-03-09 17:14:01,610 [INFO] main_pipeline: ============================================================
+2026-03-09 17:14:01,610 [INFO] main_pipeline: LAYER 1: RFM Customer Segmentation
+2026-03-09 17:14:01,610 [INFO] main_pipeline: ============================================================
+2026-03-09 17:14:09,146 [INFO] models.rfm_segmentation: RFM computed for 2,942 customers
+2026-03-09 17:14:09,146 [INFO] models.rfm_segmentation: Segment distribution:
+segment
+Hibernating           485
+Lost                  392
+Champions             334
+Loyal Customers       257
+About to Sleep        251
+Need Attention        245
+Potential Loyalist    238
+At Risk               224
+Promising             189
+Cannot Lose           167
+New Customers         160
+Name: count, dtype: int64
+2026-03-09 17:14:14,481 [INFO] models.rfm_segmentation: Optimal k=2 (silhouette=0.380)
+2026-03-09 17:14:14,698 [INFO] models.rfm_segmentation: K-Means k=2 | Silhouette: 0.380
+2026-03-09 17:14:14,716 [INFO] models.rfm_segmentation: RFM saved to D:\data\processed\rfm_segments.csv
+2026-03-09 17:14:14,735 [INFO] main_pipeline: 
+           segment  customer_count  avg_recency  avg_frequency  avg_monetary  total_revenue  avg_rfm  revenue_share
+         Champions             334        18.45           6.31       1245.69      416059.04     4.63           17.9
+   Loyal Customers             257        70.53           6.07       1245.14      320000.08     4.28           13.7
+           At Risk             224       143.61           6.12       1264.93      283344.20     3.94           12.2
+       Hibernating             485       398.34           2.76        547.41      265494.50     1.91           11.4
+       Cannot Lose             167       287.12           5.83       1197.96      200058.60     3.57            8.6
+Potential Loyalist             238        47.11           4.00        769.97      183253.86     3.52            7.9
+    Need Attention             245       150.73           3.54        716.60      175566.61     2.83            7.5
+              Lost             392       634.17           2.12        429.75      168462.84     1.45            7.2
+    About to Sleep             251       231.45           2.95        576.39      144675.00     2.31            6.2
+         Promising             189        72.40           2.46        504.38       95328.18     2.57            4.1
+     New Customers             160        19.29           2.43        481.26       77000.95     2.86            3.3
+2026-03-09 17:14:14,735 [INFO] main_pipeline: ============================================================
+2026-03-09 17:14:14,735 [INFO] main_pipeline: LAYER 2: Anomaly Detection | LAYER 5: Root Cause
+2026-03-09 17:14:14,735 [INFO] main_pipeline: ============================================================
+2026-03-09 17:14:15,310 [INFO] models.anomaly_detection: Anomaly detection complete: 15/972 days flagged (1.5%)
+2026-03-09 17:14:15,340 [INFO] main_pipeline: Anomalies detected: 15
+2026-03-09 17:14:15,348 [INFO] main_pipeline: Top anomaly: 2023-12-19 00:00:00 (type=spike, severity=critical)
+2026-03-09 17:14:15,566 [WARNING] models.anomaly_detection: Category attribution skipped: [Errno 2] No such file or directory: 'D:\\data\\raw\\olist_order_items_dataset.csv'
+2026-03-09 17:14:15,566 [INFO] main_pipeline: Root cause for 2023-12-19:
+2026-03-09 17:14:15,566 [INFO] main_pipeline: ============================================================
+2026-03-09 17:14:15,566 [INFO] main_pipeline: LAYER 3: 30-Day Revenue Forecast (SARIMA + GBM)
+2026-03-09 17:14:15,566 [INFO] main_pipeline: ============================================================
+2026-03-09 17:14:15,606 [INFO] models.revenue_forecasting: Fitting SARIMA...
+2026-03-09 17:14:17,148 [INFO] models.revenue_forecasting: SARIMA fitted | AIC=16593.2
+2026-03-09 17:14:17,148 [INFO] models.revenue_forecasting: Fitting GBM...
+2026-03-09 17:14:21,086 [INFO] models.revenue_forecasting: GBM fitted | {'MAE': 669.3, 'RMSE': 2938.8, 'MAPE': 5.02}
+2026-03-09 17:14:21,090 [INFO] models.revenue_forecasting: Ensemble fitted.
+2026-03-09 17:19:17,984 [INFO] main_pipeline: E-Commerce Revenue Intelligence Pipeline — Full Run
+2026-03-09 17:19:17,984 [INFO] main_pipeline: ============================================================
+2026-03-09 17:19:17,984 [INFO] main_pipeline: LAYER 0: Data Ingestion
+2026-03-09 17:19:17,984 [INFO] main_pipeline: ============================================================
+2026-03-09 17:19:19,714 [INFO] pipeline.data_ingestion: Loaded 'orders': 15,000 rows × 8 cols
+2026-03-09 17:19:19,735 [INFO] pipeline.data_ingestion: Loaded 'customers': 3,000 rows × 6 cols
+2026-03-09 17:19:19,763 [INFO] pipeline.data_ingestion: Loaded 'order_items': 25,274 rows × 7 cols
+2026-03-09 17:19:19,779 [INFO] pipeline.data_ingestion: Loaded 'payments': 15,000 rows × 5 cols
+2026-03-09 17:19:19,810 [INFO] pipeline.data_ingestion: Loaded 'reviews': 11,963 rows × 7 cols
+2026-03-09 17:19:19,810 [INFO] pipeline.data_ingestion: Loaded 'products': 800 rows × 10 cols
+2026-03-09 17:19:19,816 [INFO] pipeline.data_ingestion: Loaded 'sellers': 400 rows × 5 cols
+2026-03-09 17:19:19,816 [INFO] pipeline.data_ingestion: Loaded 'geolocation': 5,000 rows × 5 cols
+2026-03-09 17:19:19,816 [INFO] pipeline.data_ingestion: Loaded 'category_translation': 15 rows × 2 cols
+2026-03-09 17:19:19,826 [INFO] pipeline.data_ingestion: Loaded 'daily_revenue': 972 rows × 7 cols
+2026-03-09 17:19:19,874 [INFO] pipeline.data_ingestion: Master dataset built: 15,000 rows × 29 cols
+2026-03-09 17:19:20,058 [INFO] pipeline.data_ingestion: Saved to D:\data\processed\master_dataset.csv
+2026-03-09 17:19:20,098 [INFO] main_pipeline: Master dataset: (15000, 29)
+2026-03-09 17:19:20,098 [INFO] main_pipeline: ============================================================
+2026-03-09 17:19:20,098 [INFO] main_pipeline: LAYER 1: RFM Customer Segmentation
+2026-03-09 17:19:20,098 [INFO] main_pipeline: ============================================================
+2026-03-09 17:19:21,078 [INFO] models.rfm_segmentation: RFM computed for 2,942 customers
+2026-03-09 17:19:21,078 [INFO] models.rfm_segmentation: Segment distribution:
+segment
+Hibernating           485
+Lost                  392
+Champions             334
+Loyal Customers       257
+About to Sleep        251
+Need Attention        245
+Potential Loyalist    238
+At Risk               224
+Promising             189
+Cannot Lose           167
+New Customers         160
+Name: count, dtype: int64
+2026-03-09 17:19:24,687 [INFO] models.rfm_segmentation: Optimal k=2 (silhouette=0.380)
+2026-03-09 17:19:24,816 [INFO] models.rfm_segmentation: K-Means k=2 | Silhouette: 0.380
+2026-03-09 17:19:24,832 [INFO] models.rfm_segmentation: RFM saved to D:\data\processed\rfm_segments.csv
+2026-03-09 17:19:24,847 [INFO] main_pipeline: 
+           segment  customer_count  avg_recency  avg_frequency  avg_monetary  total_revenue  avg_rfm  revenue_share
+         Champions             334        18.45           6.31       1245.69      416059.04     4.63           17.9
+   Loyal Customers             257        70.53           6.07       1245.14      320000.08     4.28           13.7
+           At Risk             224       143.61           6.12       1264.93      283344.20     3.94           12.2
+       Hibernating             485       398.34           2.76        547.41      265494.50     1.91           11.4
+       Cannot Lose             167       287.12           5.83       1197.96      200058.60     3.57            8.6
+Potential Loyalist             238        47.11           4.00        769.97      183253.86     3.52            7.9
+    Need Attention             245       150.73           3.54        716.60      175566.61     2.83            7.5
+              Lost             392       634.17           2.12        429.75      168462.84     1.45            7.2
+    About to Sleep             251       231.45           2.95        576.39      144675.00     2.31            6.2
+         Promising             189        72.40           2.46        504.38       95328.18     2.57            4.1
+     New Customers             160        19.29           2.43        481.26       77000.95     2.86            3.3
+2026-03-09 17:19:24,848 [INFO] main_pipeline: ============================================================
+2026-03-09 17:19:24,848 [INFO] main_pipeline: LAYER 2: Anomaly Detection | LAYER 5: Root Cause
+2026-03-09 17:19:24,848 [INFO] main_pipeline: ============================================================
+2026-03-09 17:19:25,100 [INFO] models.anomaly_detection: Anomaly detection complete: 15/972 days flagged (1.5%)
+2026-03-09 17:19:25,219 [INFO] main_pipeline: Anomalies detected: 15
+2026-03-09 17:19:25,219 [INFO] main_pipeline: Top anomaly: 2023-12-19 00:00:00 (type=spike, severity=critical)
+2026-03-09 17:19:25,296 [WARNING] models.anomaly_detection: Category attribution skipped: [Errno 2] No such file or directory: 'D:\\data\\raw\\olist_order_items_dataset.csv'
+2026-03-09 17:19:25,296 [INFO] main_pipeline: Root cause for 2023-12-19:
+2026-03-09 17:19:25,296 [INFO] main_pipeline:   [customer_state] Top driver: RJ (d R$1640)
+2026-03-09 17:19:25,296 [INFO] main_pipeline:   [payment_type] Top driver: debit_card (d R$981)
+2026-03-09 17:19:25,312 [INFO] main_pipeline: ============================================================
+2026-03-09 17:19:25,312 [INFO] main_pipeline: LAYER 3: 30-Day Revenue Forecast (SARIMA + GBM)
+2026-03-09 17:19:25,312 [INFO] main_pipeline: ============================================================
+2026-03-09 17:19:25,351 [INFO] models.revenue_forecasting: Fitting SARIMA...
+2026-03-09 17:19:26,322 [INFO] models.revenue_forecasting: SARIMA fitted | AIC=16593.2
+2026-03-09 17:19:26,322 [INFO] models.revenue_forecasting: Fitting GBM...
+2026-03-09 17:19:29,965 [INFO] models.revenue_forecasting: GBM fitted | {'MAE': 669.3, 'RMSE': 2938.8, 'MAPE': 5.02}
+2026-03-09 17:19:29,965 [INFO] models.revenue_forecasting: Ensemble fitted.
+2026-03-09 17:19:30,481 [INFO] main_pipeline: Forecast next 7d: R$18,310
+2026-03-09 17:19:30,481 [INFO] main_pipeline: Forecast next 30d: R$81,720
+2026-03-09 17:19:31,370 [INFO] models.revenue_forecasting: SARIMA fitted | AIC=15913.1
+2026-03-09 17:19:35,020 [INFO] models.revenue_forecasting: GBM fitted | {'MAE': 222.73, 'RMSE': 652.52, 'MAPE': 12.9}
+2026-03-09 17:19:35,485 [INFO] models.revenue_forecasting:   sarima_forecast: MAE=1543 | MAPE=20.2%
+2026-03-09 17:19:35,485 [INFO] models.revenue_forecasting:   gbm_forecast: MAE=4515 | MAPE=83.2%
+2026-03-09 17:19:35,485 [INFO] models.revenue_forecasting:   ensemble_forecast: MAE=3288 | MAPE=56.9%
+2026-03-09 17:19:35,485 [INFO] main_pipeline: ============================================================
+2026-03-09 17:19:35,485 [INFO] main_pipeline: LAYER 4: Cohort Retention + Churn Prediction
+2026-03-09 17:19:35,485 [INFO] main_pipeline: ============================================================
+2026-03-09 17:19:35,704 [INFO] models.cohort_retention: Cohort retention matrix: (36, 36)
+2026-03-09 17:19:35,704 [INFO] models.cohort_retention: Retention matrix saved.
+2026-03-09 17:19:35,704 [INFO] models.cohort_retention: LTV matrix saved.
+2026-03-09 17:19:35,720 [INFO] main_pipeline: Cohort stats: {'total_cohorts': 36, 'avg_m1_retention_pct': 16.0, 'avg_m3_retention_pct': 13.6, 'avg_m6_retention_pct': 13.2, 'best_cohort_m1': '2023-11', 'worst_cohort_m1': '2022-02', 'avg_cohort_size': 83.0, 'total_customers': 2983}
+2026-03-09 17:19:36,050 [INFO] models.cohort_retention: Churn features: 2983 customers | Churned: 57.0%
+2026-03-09 17:19:38,658 [INFO] models.cohort_retention: Churn model: CV AUC=1.000 ± 0.000
+2026-03-09 17:19:38,658 [INFO] main_pipeline: Churn model: {'cv_auc_mean': 1.0, 'cv_auc_std': 0.0, 'churn_rate': 0.57}
+2026-03-09 17:19:38,672 [INFO] main_pipeline: High/Critical risk: 1701 customers
+2026-03-09 17:19:38,675 [INFO] main_pipeline: Pipeline complete in 20.7s
+2026-03-09 17:19:38,675 [INFO] main_pipeline: 
+Outputs:
+2026-03-09 17:19:38,675 [INFO] main_pipeline:   anomaly_detection.csv: 287.7 KB
+2026-03-09 17:19:38,675 [INFO] main_pipeline:   churn_features.csv: 251.7 KB
+2026-03-09 17:19:38,675 [INFO] main_pipeline:   churn_predictions.csv: 66.6 KB
+2026-03-09 17:19:38,675 [INFO] main_pipeline:   cohort_retention.csv: 4.1 KB
+2026-03-09 17:19:38,675 [INFO] main_pipeline:   forecast_backtest.csv: 2.3 KB
+2026-03-09 17:19:38,675 [INFO] main_pipeline:   master_dataset.csv: 3366.4 KB
+2026-03-09 17:19:38,675 [INFO] main_pipeline:   revenue_forecast.csv: 3.1 KB
+2026-03-09 17:19:38,675 [INFO] main_pipeline:   rfm_segments.csv: 282.4 KB
+2026-03-09 17:19:38,675 [INFO] main_pipeline: 
+Next steps:
+2026-03-09 17:19:38,675 [INFO] main_pipeline:   pip install dash plotly && python src/dashboard/app.py
+2026-03-09 17:19:38,675 [INFO] main_pipeline:   # OR
+2026-03-09 17:19:38,675 [INFO] main_pipeline:   pip install streamlit plotly && streamlit run src/dashboard/streamlit_app.py
+2026-03-09 17:22:03,892 [INFO] main_pipeline: E-Commerce Revenue Intelligence Pipeline — Full Run
+2026-03-09 17:22:03,900 [INFO] main_pipeline: ============================================================
+2026-03-09 17:22:03,900 [INFO] main_pipeline: LAYER 0: Data Ingestion
+2026-03-09 17:22:03,900 [INFO] main_pipeline: ============================================================
+2026-03-09 17:22:05,435 [INFO] pipeline.data_ingestion: Loaded 'orders': 15,000 rows × 8 cols
+2026-03-09 17:22:05,485 [INFO] pipeline.data_ingestion: Loaded 'customers': 3,000 rows × 6 cols
+2026-03-09 17:22:05,614 [INFO] pipeline.data_ingestion: Loaded 'order_items': 25,274 rows × 7 cols
+2026-03-09 17:22:05,696 [INFO] pipeline.data_ingestion: Loaded 'payments': 15,000 rows × 5 cols
+2026-03-09 17:22:05,824 [INFO] pipeline.data_ingestion: Loaded 'reviews': 11,963 rows × 7 cols
+2026-03-09 17:22:05,843 [INFO] pipeline.data_ingestion: Loaded 'products': 800 rows × 10 cols
+2026-03-09 17:22:05,851 [INFO] pipeline.data_ingestion: Loaded 'sellers': 400 rows × 5 cols
+2026-03-09 17:22:05,903 [INFO] pipeline.data_ingestion: Loaded 'geolocation': 5,000 rows × 5 cols
+2026-03-09 17:22:05,918 [INFO] pipeline.data_ingestion: Loaded 'category_translation': 15 rows × 2 cols
+2026-03-09 17:22:05,944 [INFO] pipeline.data_ingestion: Loaded 'daily_revenue': 972 rows × 7 cols
+2026-03-09 17:22:06,070 [INFO] pipeline.data_ingestion: Master dataset built: 15,000 rows × 29 cols
+2026-03-09 17:22:06,532 [INFO] pipeline.data_ingestion: Saved to D:\data\processed\master_dataset.csv
+2026-03-09 17:22:06,590 [INFO] main_pipeline: Master dataset: (15000, 29)
+2026-03-09 17:22:06,593 [INFO] main_pipeline: ============================================================
+2026-03-09 17:22:06,593 [INFO] main_pipeline: LAYER 1: RFM Customer Segmentation
+2026-03-09 17:22:06,594 [INFO] main_pipeline: ============================================================
+2026-03-09 17:22:08,784 [INFO] models.rfm_segmentation: RFM computed for 2,942 customers
+2026-03-09 17:22:08,789 [INFO] models.rfm_segmentation: Segment distribution:
+segment
+Hibernating           485
+Lost                  392
+Champions             334
+Loyal Customers       257
+About to Sleep        251
+Need Attention        245
+Potential Loyalist    238
+At Risk               224
+Promising             189
+Cannot Lose           167
+New Customers         160
+Name: count, dtype: int64
+2026-03-09 17:22:15,052 [INFO] models.rfm_segmentation: Optimal k=2 (silhouette=0.380)
+2026-03-09 17:22:15,294 [INFO] models.rfm_segmentation: K-Means k=2 | Silhouette: 0.380
+2026-03-09 17:22:15,339 [INFO] models.rfm_segmentation: RFM saved to D:\data\processed\rfm_segments.csv
+2026-03-09 17:22:15,357 [INFO] main_pipeline: 
+           segment  customer_count  avg_recency  avg_frequency  avg_monetary  total_revenue  avg_rfm  revenue_share
+         Champions             334        18.45           6.31       1245.69      416059.04     4.63           17.9
+   Loyal Customers             257        70.53           6.07       1245.14      320000.08     4.28           13.7
+           At Risk             224       143.61           6.12       1264.93      283344.20     3.94           12.2
+       Hibernating             485       398.34           2.76        547.41      265494.50     1.91           11.4
+       Cannot Lose             167       287.12           5.83       1197.96      200058.60     3.57            8.6
+Potential Loyalist             238        47.11           4.00        769.97      183253.86     3.52            7.9
+    Need Attention             245       150.73           3.54        716.60      175566.61     2.83            7.5
+              Lost             392       634.17           2.12        429.75      168462.84     1.45            7.2
+    About to Sleep             251       231.45           2.95        576.39      144675.00     2.31            6.2
+         Promising             189        72.40           2.46        504.38       95328.18     2.57            4.1
+     New Customers             160        19.29           2.43        481.26       77000.95     2.86            3.3
+2026-03-09 17:22:15,357 [INFO] main_pipeline: ============================================================
+2026-03-09 17:22:15,357 [INFO] main_pipeline: LAYER 2: Anomaly Detection | LAYER 5: Root Cause
+2026-03-09 17:22:15,358 [INFO] main_pipeline: ============================================================
+2026-03-09 17:22:15,823 [INFO] models.anomaly_detection: Anomaly detection complete: 15/972 days flagged (1.5%)
+2026-03-09 17:22:15,855 [INFO] main_pipeline: Anomalies detected: 15
+2026-03-09 17:22:15,856 [INFO] main_pipeline: Top anomaly: 2023-12-19 00:00:00 (type=spike, severity=critical)
+2026-03-09 17:22:16,158 [WARNING] models.anomaly_detection: Category attribution skipped: [Errno 2] No such file or directory: 'D:\\data\\raw\\olist_order_items_dataset.csv'
+2026-03-09 17:22:16,159 [INFO] main_pipeline: Root cause for 2023-12-19:
+2026-03-09 17:22:16,159 [INFO] main_pipeline:   [customer_state] Top driver: RJ (d R$1640)
+2026-03-09 17:22:16,160 [INFO] main_pipeline:   [payment_type] Top driver: debit_card (d R$981)
+2026-03-09 17:22:16,165 [INFO] main_pipeline: ============================================================
+2026-03-09 17:22:16,165 [INFO] main_pipeline: LAYER 3: 30-Day Revenue Forecast (SARIMA + GBM)
+2026-03-09 17:22:16,165 [INFO] main_pipeline: ============================================================
+2026-03-09 17:22:16,188 [INFO] models.revenue_forecasting: Fitting SARIMA...
+2026-03-09 17:22:18,071 [INFO] models.revenue_forecasting: SARIMA fitted | AIC=16593.2
+2026-03-09 17:22:18,072 [INFO] models.revenue_forecasting: Fitting GBM...
+2026-03-09 17:22:25,058 [INFO] models.revenue_forecasting: GBM fitted | {'MAE': 669.3, 'RMSE': 2938.8, 'MAPE': 5.02}
+2026-03-09 17:22:25,063 [INFO] models.revenue_forecasting: Ensemble fitted.
+2026-03-09 17:22:26,114 [INFO] main_pipeline: Forecast next 7d: R$18,310
+2026-03-09 17:22:26,114 [INFO] main_pipeline: Forecast next 30d: R$81,720
+2026-03-09 17:22:27,464 [INFO] models.revenue_forecasting: SARIMA fitted | AIC=15913.1
+2026-03-09 17:22:32,675 [INFO] models.revenue_forecasting: GBM fitted | {'MAE': 222.73, 'RMSE': 652.52, 'MAPE': 12.9}
+2026-03-09 17:22:33,336 [INFO] models.revenue_forecasting:   sarima_forecast: MAE=1543 | MAPE=20.2%
+2026-03-09 17:22:33,337 [INFO] models.revenue_forecasting:   gbm_forecast: MAE=4515 | MAPE=83.2%
+2026-03-09 17:22:33,337 [INFO] models.revenue_forecasting:   ensemble_forecast: MAE=3288 | MAPE=56.9%
+2026-03-09 17:22:33,348 [INFO] main_pipeline: ============================================================
+2026-03-09 17:22:33,349 [INFO] main_pipeline: LAYER 4: Cohort Retention + Churn Prediction
+2026-03-09 17:22:33,349 [INFO] main_pipeline: ============================================================
+2026-03-09 17:22:33,526 [INFO] models.cohort_retention: Cohort retention matrix: (36, 36)
+2026-03-09 17:22:33,542 [INFO] models.cohort_retention: Retention matrix saved.
+2026-03-09 17:22:33,545 [INFO] models.cohort_retention: LTV matrix saved.
+2026-03-09 17:22:33,548 [INFO] main_pipeline: Cohort stats: {'total_cohorts': 36, 'avg_m1_retention_pct': 16.0, 'avg_m3_retention_pct': 13.6, 'avg_m6_retention_pct': 13.2, 'best_cohort_m1': '2023-11', 'worst_cohort_m1': '2022-02', 'avg_cohort_size': 83.0, 'total_customers': 2983}
+2026-03-09 17:22:33,999 [INFO] models.cohort_retention: Churn features: 2983 customers | Churned: 57.0%
+2026-03-09 17:22:38,285 [INFO] models.cohort_retention: Churn model: CV AUC=1.000 ± 0.000
+2026-03-09 17:22:38,286 [INFO] main_pipeline: Churn model: {'cv_auc_mean': 1.0, 'cv_auc_std': 0.0, 'churn_rate': 0.57}
+2026-03-09 17:22:38,303 [INFO] main_pipeline: High/Critical risk: 1701 customers
+2026-03-09 17:22:38,307 [INFO] main_pipeline: Pipeline complete in 34.4s
+2026-03-09 17:22:38,310 [INFO] main_pipeline: 
+Outputs:
+2026-03-09 17:22:38,311 [INFO] main_pipeline:   anomaly_detection.csv: 287.7 KB
+2026-03-09 17:22:38,311 [INFO] main_pipeline:   churn_features.csv: 251.7 KB
+2026-03-09 17:22:38,312 [INFO] main_pipeline:   churn_predictions.csv: 66.6 KB
+2026-03-09 17:22:38,312 [INFO] main_pipeline:   cohort_retention.csv: 4.1 KB
+2026-03-09 17:22:38,312 [INFO] main_pipeline:   forecast_backtest.csv: 2.3 KB
+2026-03-09 17:22:38,313 [INFO] main_pipeline:   master_dataset.csv: 3366.4 KB
+2026-03-09 17:22:38,313 [INFO] main_pipeline:   revenue_forecast.csv: 3.1 KB
+2026-03-09 17:22:38,313 [INFO] main_pipeline:   rfm_segments.csv: 282.4 KB
+2026-03-09 17:22:38,314 [INFO] main_pipeline: 
+Next steps:
+2026-03-09 17:22:38,314 [INFO] main_pipeline:   pip install dash plotly && python src/dashboard/app.py
+2026-03-09 17:22:38,314 [INFO] main_pipeline:   # OR
+2026-03-09 17:22:38,314 [INFO] main_pipeline:   pip install streamlit plotly && streamlit run src/dashboard/streamlit_app.py
+2026-03-09 17:28:23,938 [INFO] main_pipeline: 
+============================================================
+2026-03-09 17:28:23,939 [INFO] main_pipeline: E-Commerce Revenue Intelligence Pipeline - Full Run
+2026-03-09 17:28:23,939 [INFO] main_pipeline: ============================================================
+
+2026-03-09 17:28:23,939 [INFO] main_pipeline: ============================================================
+2026-03-09 17:28:23,939 [INFO] main_pipeline: LAYER 0: Data Ingestion
+2026-03-09 17:28:23,939 [INFO] main_pipeline: ============================================================
+2026-03-09 17:28:24,510 [INFO] pipeline.data_ingestion: Loaded 'orders': 15,000 rows × 8 cols
+2026-03-09 17:28:24,516 [INFO] pipeline.data_ingestion: Loaded 'customers': 3,000 rows × 6 cols
+2026-03-09 17:28:24,553 [INFO] pipeline.data_ingestion: Loaded 'order_items': 25,274 rows × 7 cols
+2026-03-09 17:28:24,565 [INFO] pipeline.data_ingestion: Loaded 'payments': 15,000 rows × 5 cols
+2026-03-09 17:28:24,591 [INFO] pipeline.data_ingestion: Loaded 'reviews': 11,963 rows × 7 cols
+2026-03-09 17:28:24,594 [INFO] pipeline.data_ingestion: Loaded 'products': 800 rows × 10 cols
+2026-03-09 17:28:24,596 [INFO] pipeline.data_ingestion: Loaded 'sellers': 400 rows × 5 cols
+2026-03-09 17:28:24,602 [INFO] pipeline.data_ingestion: Loaded 'geolocation': 5,000 rows × 5 cols
+2026-03-09 17:28:24,603 [INFO] pipeline.data_ingestion: Loaded 'category_translation': 15 rows × 2 cols
+2026-03-09 17:28:24,607 [INFO] pipeline.data_ingestion: Loaded 'daily_revenue': 972 rows × 7 cols
+2026-03-09 17:28:24,660 [INFO] pipeline.data_ingestion: Master dataset built: 15,000 rows × 29 cols
+2026-03-09 17:28:24,849 [INFO] pipeline.data_ingestion: Saved to D:\data\processed\master_dataset.csv
+2026-03-09 17:28:24,886 [INFO] main_pipeline: Master dataset: (15000, 29)
+2026-03-09 17:28:24,889 [INFO] main_pipeline: ============================================================
+2026-03-09 17:28:24,889 [INFO] main_pipeline: LAYER 1: RFM Customer Segmentation
+2026-03-09 17:28:24,890 [INFO] main_pipeline: ============================================================
+2026-03-09 17:28:25,851 [INFO] models.rfm_segmentation: RFM computed for 2,942 customers
+2026-03-09 17:28:25,852 [INFO] models.rfm_segmentation: Segment distribution:
+segment
+Hibernating           485
+Lost                  392
+Champions             334
+Loyal Customers       257
+About to Sleep        251
+Need Attention        245
+Potential Loyalist    238
+At Risk               224
+Promising             189
+Cannot Lose           167
+New Customers         160
+Name: count, dtype: int64
+2026-03-09 17:28:29,381 [INFO] models.rfm_segmentation: Optimal k=2 (silhouette=0.380)
+2026-03-09 17:28:29,499 [INFO] models.rfm_segmentation: K-Means k=2 | Silhouette: 0.380
+2026-03-09 17:28:29,517 [INFO] models.rfm_segmentation: RFM saved to D:\data\processed\rfm_segments.csv
+2026-03-09 17:28:29,526 [INFO] main_pipeline: 
+           segment  customer_count  avg_recency  avg_frequency  avg_monetary  total_revenue  avg_rfm  revenue_share
+         Champions             334        18.45           6.31       1245.69      416059.04     4.63           17.9
+   Loyal Customers             257        70.53           6.07       1245.14      320000.08     4.28           13.7
+           At Risk             224       143.61           6.12       1264.93      283344.20     3.94           12.2
+       Hibernating             485       398.34           2.76        547.41      265494.50     1.91           11.4
+       Cannot Lose             167       287.12           5.83       1197.96      200058.60     3.57            8.6
+Potential Loyalist             238        47.11           4.00        769.97      183253.86     3.52            7.9
+    Need Attention             245       150.73           3.54        716.60      175566.61     2.83            7.5
+              Lost             392       634.17           2.12        429.75      168462.84     1.45            7.2
+    About to Sleep             251       231.45           2.95        576.39      144675.00     2.31            6.2
+         Promising             189        72.40           2.46        504.38       95328.18     2.57            4.1
+     New Customers             160        19.29           2.43        481.26       77000.95     2.86            3.3
+2026-03-09 17:28:29,526 [INFO] main_pipeline: ============================================================
+2026-03-09 17:28:29,526 [INFO] main_pipeline: LAYER 2: Anomaly Detection | LAYER 5: Root Cause
+2026-03-09 17:28:29,526 [INFO] main_pipeline: ============================================================
+2026-03-09 17:28:29,769 [INFO] models.anomaly_detection: Anomaly detection complete: 15/972 days flagged (1.5%)
+2026-03-09 17:28:29,786 [INFO] main_pipeline: Anomalies detected: 15
+2026-03-09 17:28:29,786 [INFO] main_pipeline: Top anomaly: 2023-12-19 00:00:00 (type=spike, severity=critical)
+2026-03-09 17:28:29,860 [WARNING] models.anomaly_detection: Category attribution skipped: [Errno 2] No such file or directory: 'D:\\data\\raw\\olist_order_items_dataset.csv'
+2026-03-09 17:28:29,860 [INFO] main_pipeline: Root cause for 2023-12-19:
+2026-03-09 17:28:29,860 [INFO] main_pipeline:   [customer_state] Top driver: RJ (d R$1640)
+2026-03-09 17:28:29,861 [INFO] main_pipeline:   [payment_type] Top driver: debit_card (d R$981)
+2026-03-09 17:28:29,865 [INFO] main_pipeline: ============================================================
+2026-03-09 17:28:29,865 [INFO] main_pipeline: LAYER 3: 30-Day Revenue Forecast (SARIMA + GBM)
+2026-03-09 17:28:29,865 [INFO] main_pipeline: ============================================================
+2026-03-09 17:28:29,870 [INFO] models.revenue_forecasting: Fitting SARIMA...
+2026-03-09 17:28:30,804 [INFO] models.revenue_forecasting: SARIMA fitted | AIC=16593.2
+2026-03-09 17:28:30,804 [INFO] models.revenue_forecasting: Fitting GBM...
+2026-03-09 17:28:34,198 [INFO] models.revenue_forecasting: GBM fitted | {'MAE': 669.3, 'RMSE': 2938.8, 'MAPE': 5.02}
+2026-03-09 17:28:34,200 [INFO] models.revenue_forecasting: Ensemble fitted.
+2026-03-09 17:28:34,612 [INFO] main_pipeline: Forecast next 7d: R$18,310
+2026-03-09 17:28:34,612 [INFO] main_pipeline: Forecast next 30d: R$81,720
+2026-03-09 17:28:35,446 [INFO] models.revenue_forecasting: SARIMA fitted | AIC=15913.1
+2026-03-09 17:28:38,695 [INFO] models.revenue_forecasting: GBM fitted | {'MAE': 222.73, 'RMSE': 652.52, 'MAPE': 12.9}
+2026-03-09 17:28:39,127 [INFO] models.revenue_forecasting:   sarima_forecast: MAE=1543 | MAPE=20.2%
+2026-03-09 17:28:39,128 [INFO] models.revenue_forecasting:   gbm_forecast: MAE=4515 | MAPE=83.2%
+2026-03-09 17:28:39,128 [INFO] models.revenue_forecasting:   ensemble_forecast: MAE=3288 | MAPE=56.9%
+2026-03-09 17:28:39,136 [INFO] main_pipeline: ============================================================
+2026-03-09 17:28:39,136 [INFO] main_pipeline: LAYER 4: Cohort Retention + Churn Prediction
+2026-03-09 17:28:39,136 [INFO] main_pipeline: ============================================================
+2026-03-09 17:28:39,222 [INFO] models.cohort_retention: Cohort retention matrix: (36, 36)
+2026-03-09 17:28:39,233 [INFO] models.cohort_retention: Retention matrix saved.
+2026-03-09 17:28:39,235 [INFO] models.cohort_retention: LTV matrix saved.
+2026-03-09 17:28:39,236 [INFO] main_pipeline: Cohort stats: {'total_cohorts': 36, 'avg_m1_retention_pct': 16.0, 'avg_m3_retention_pct': 13.6, 'avg_m6_retention_pct': 13.2, 'best_cohort_m1': '2023-11', 'worst_cohort_m1': '2022-02', 'avg_cohort_size': 83.0, 'total_customers': 2983}
+2026-03-09 17:28:39,517 [INFO] models.cohort_retention: Churn features: 2983 customers | Churned: 57.0%
+2026-03-09 17:28:41,736 [INFO] models.cohort_retention: Churn model: CV AUC=1.000 ± 0.000
+2026-03-09 17:28:41,737 [INFO] main_pipeline: Churn model: {'cv_auc_mean': 1.0, 'cv_auc_std': 0.0, 'churn_rate': 0.57}
+2026-03-09 17:28:41,746 [INFO] main_pipeline: High/Critical risk: 1701 customers
+2026-03-09 17:28:41,746 [INFO] main_pipeline: 
+============================================================
+2026-03-09 17:28:41,746 [INFO] main_pipeline: Pipeline complete in 17.8s
+2026-03-09 17:28:41,747 [INFO] main_pipeline: ============================================================
+2026-03-09 17:28:41,747 [INFO] main_pipeline: 
+Outputs:
+2026-03-09 17:28:41,748 [INFO] main_pipeline:   anomaly_detection.csv: 287.7 KB
+2026-03-09 17:28:41,748 [INFO] main_pipeline:   churn_features.csv: 251.7 KB
+2026-03-09 17:28:41,749 [INFO] main_pipeline:   churn_predictions.csv: 66.6 KB
+2026-03-09 17:28:41,750 [INFO] main_pipeline:   cohort_retention.csv: 4.1 KB
+2026-03-09 17:28:41,750 [INFO] main_pipeline:   forecast_backtest.csv: 2.3 KB
+2026-03-09 17:28:41,750 [INFO] main_pipeline:   master_dataset.csv: 3366.4 KB
+2026-03-09 17:28:41,751 [INFO] main_pipeline:   revenue_forecast.csv: 3.1 KB
+2026-03-09 17:28:41,751 [INFO] main_pipeline:   rfm_segments.csv: 282.4 KB
+2026-03-09 17:28:41,751 [INFO] main_pipeline: 
+Next steps:
+2026-03-09 17:28:41,751 [INFO] main_pipeline:   pip install dash plotly && python src/dashboard/app.py
+2026-03-09 17:28:41,751 [INFO] main_pipeline:   # OR
+2026-03-09 17:28:41,752 [INFO] main_pipeline:   pip install streamlit plotly && streamlit run src/dashboard/streamlit_app.py
+2026-03-09 17:33:23,218 [INFO] main_pipeline: 
+============================================================
+2026-03-09 17:33:23,218 [INFO] main_pipeline: E-Commerce Revenue Intelligence Pipeline - Full Run
+2026-03-09 17:33:23,218 [INFO] main_pipeline: ============================================================
+
+2026-03-09 17:33:23,218 [INFO] main_pipeline: ============================================================
+2026-03-09 17:33:23,218 [INFO] main_pipeline: LAYER 0: Data Ingestion
+2026-03-09 17:33:23,218 [INFO] main_pipeline: ============================================================
+2026-03-09 17:33:23,862 [INFO] pipeline.data_ingestion: Loaded 'orders': 15,000 rows × 8 cols
+2026-03-09 17:33:23,868 [INFO] pipeline.data_ingestion: Loaded 'customers': 3,000 rows × 6 cols
+2026-03-09 17:33:23,905 [INFO] pipeline.data_ingestion: Loaded 'order_items': 25,274 rows × 7 cols
+2026-03-09 17:33:23,916 [INFO] pipeline.data_ingestion: Loaded 'payments': 15,000 rows × 5 cols
+2026-03-09 17:33:23,945 [INFO] pipeline.data_ingestion: Loaded 'reviews': 11,963 rows × 7 cols
+2026-03-09 17:33:23,948 [INFO] pipeline.data_ingestion: Loaded 'products': 800 rows × 10 cols
+2026-03-09 17:33:23,950 [INFO] pipeline.data_ingestion: Loaded 'sellers': 400 rows × 5 cols
+2026-03-09 17:33:23,956 [INFO] pipeline.data_ingestion: Loaded 'geolocation': 5,000 rows × 5 cols
+2026-03-09 17:33:23,958 [INFO] pipeline.data_ingestion: Loaded 'category_translation': 15 rows × 2 cols
+2026-03-09 17:33:23,963 [INFO] pipeline.data_ingestion: Loaded 'daily_revenue': 972 rows × 7 cols
+2026-03-09 17:33:24,015 [INFO] pipeline.data_ingestion: Master dataset built: 15,000 rows × 29 cols
+2026-03-09 17:33:24,226 [INFO] pipeline.data_ingestion: Saved to D:\data\processed\master_dataset.csv
+2026-03-09 17:33:24,259 [INFO] main_pipeline: Master dataset: (15000, 29)
+2026-03-09 17:33:24,261 [INFO] main_pipeline: ============================================================
+2026-03-09 17:33:24,261 [INFO] main_pipeline: LAYER 1: RFM Customer Segmentation
+2026-03-09 17:33:24,261 [INFO] main_pipeline: ============================================================
+2026-03-09 17:33:25,422 [INFO] models.rfm_segmentation: RFM computed for 2,942 customers
+2026-03-09 17:33:25,423 [INFO] models.rfm_segmentation: Segment distribution:
+segment
+Hibernating           485
+Lost                  392
+Champions             334
+Loyal Customers       257
+About to Sleep        251
+Need Attention        245
+Potential Loyalist    238
+At Risk               224
+Promising             189
+Cannot Lose           167
+New Customers         160
+Name: count, dtype: int64
+2026-03-09 17:33:29,319 [INFO] models.rfm_segmentation: Optimal k=2 (silhouette=0.380)
+2026-03-09 17:33:29,448 [INFO] models.rfm_segmentation: K-Means k=2 | Silhouette: 0.380
+2026-03-09 17:33:29,469 [INFO] models.rfm_segmentation: RFM saved to D:\data\processed\rfm_segments.csv
+2026-03-09 17:33:29,477 [INFO] main_pipeline: 
+           segment  customer_count  avg_recency  avg_frequency  avg_monetary  total_revenue  avg_rfm  revenue_share
+         Champions             334        18.45           6.31       1245.69      416059.04     4.63           17.9
+   Loyal Customers             257        70.53           6.07       1245.14      320000.08     4.28           13.7
+           At Risk             224       143.61           6.12       1264.93      283344.20     3.94           12.2
+       Hibernating             485       398.34           2.76        547.41      265494.50     1.91           11.4
+       Cannot Lose             167       287.12           5.83       1197.96      200058.60     3.57            8.6
+Potential Loyalist             238        47.11           4.00        769.97      183253.86     3.52            7.9
+    Need Attention             245       150.73           3.54        716.60      175566.61     2.83            7.5
+              Lost             392       634.17           2.12        429.75      168462.84     1.45            7.2
+    About to Sleep             251       231.45           2.95        576.39      144675.00     2.31            6.2
+         Promising             189        72.40           2.46        504.38       95328.18     2.57            4.1
+     New Customers             160        19.29           2.43        481.26       77000.95     2.86            3.3
+2026-03-09 17:33:29,477 [INFO] main_pipeline: ============================================================
+2026-03-09 17:33:29,477 [INFO] main_pipeline: LAYER 2: Anomaly Detection | LAYER 5: Root Cause
+2026-03-09 17:33:29,477 [INFO] main_pipeline: ============================================================
+2026-03-09 17:33:29,733 [INFO] models.anomaly_detection: Anomaly detection complete: 15/972 days flagged (1.5%)
+2026-03-09 17:33:29,749 [INFO] main_pipeline: Anomalies detected: 15
+2026-03-09 17:33:29,750 [INFO] main_pipeline: Top anomaly: 2023-12-19 00:00:00 (type=spike, severity=critical)
+2026-03-09 17:33:29,833 [WARNING] models.anomaly_detection: Category attribution skipped: [Errno 2] No such file or directory: 'D:\\data\\raw\\olist_order_items_dataset.csv'
+2026-03-09 17:33:29,833 [INFO] main_pipeline: Root cause for 2023-12-19:
+2026-03-09 17:33:29,833 [INFO] main_pipeline:   [customer_state] Top driver: RJ (d R$1640)
+2026-03-09 17:33:29,833 [INFO] main_pipeline:   [payment_type] Top driver: debit_card (d R$981)
+2026-03-09 17:33:29,836 [INFO] main_pipeline: ============================================================
+2026-03-09 17:33:29,836 [INFO] main_pipeline: LAYER 3: 30-Day Revenue Forecast (SARIMA + GBM)
+2026-03-09 17:33:29,836 [INFO] main_pipeline: ============================================================
+2026-03-09 17:33:29,841 [INFO] models.revenue_forecasting: Fitting SARIMA...
+2026-03-09 17:33:30,820 [INFO] models.revenue_forecasting: SARIMA fitted | AIC=16593.2
+2026-03-09 17:33:30,820 [INFO] models.revenue_forecasting: Fitting GBM...
+2026-03-09 17:33:34,350 [INFO] models.revenue_forecasting: GBM fitted | {'MAE': 669.3, 'RMSE': 2938.8, 'MAPE': 5.02}
+2026-03-09 17:33:34,351 [INFO] models.revenue_forecasting: Ensemble fitted.
+2026-03-09 17:33:34,788 [INFO] main_pipeline: Forecast next 7d: R$18,310
+2026-03-09 17:33:34,788 [INFO] main_pipeline: Forecast next 30d: R$81,720
+2026-03-09 17:33:35,663 [INFO] models.revenue_forecasting: SARIMA fitted | AIC=15913.1
+2026-03-09 17:33:39,120 [INFO] models.revenue_forecasting: GBM fitted | {'MAE': 222.73, 'RMSE': 652.52, 'MAPE': 12.9}
+2026-03-09 17:33:39,583 [INFO] models.revenue_forecasting:   sarima_forecast: MAE=1543 | MAPE=20.2%
+2026-03-09 17:33:39,585 [INFO] models.revenue_forecasting:   gbm_forecast: MAE=4515 | MAPE=83.2%
+2026-03-09 17:33:39,585 [INFO] models.revenue_forecasting:   ensemble_forecast: MAE=3288 | MAPE=56.9%
+2026-03-09 17:33:39,591 [INFO] main_pipeline: ============================================================
+2026-03-09 17:33:39,591 [INFO] main_pipeline: LAYER 4: Cohort Retention + Churn Prediction
+2026-03-09 17:33:39,591 [INFO] main_pipeline: ============================================================
+2026-03-09 17:33:39,674 [INFO] models.cohort_retention: Cohort retention matrix: (36, 36)
+2026-03-09 17:33:39,683 [INFO] models.cohort_retention: Retention matrix saved.
+2026-03-09 17:33:39,684 [INFO] models.cohort_retention: LTV matrix saved.
+2026-03-09 17:33:39,686 [INFO] main_pipeline: Cohort stats: {'total_cohorts': 36, 'avg_m1_retention_pct': 16.0, 'avg_m3_retention_pct': 13.6, 'avg_m6_retention_pct': 13.2, 'best_cohort_m1': '2023-11', 'worst_cohort_m1': '2022-02', 'avg_cohort_size': 83.0, 'total_customers': 2983}
+2026-03-09 17:33:39,994 [INFO] models.cohort_retention: Churn features: 2983 customers | Churned: 57.0%
+2026-03-09 17:33:42,423 [INFO] models.cohort_retention: Churn model: CV AUC=1.000 ± 0.000
+2026-03-09 17:33:42,423 [INFO] main_pipeline: Churn model: {'cv_auc_mean': 1.0, 'cv_auc_std': 0.0, 'churn_rate': 0.57}
+2026-03-09 17:33:42,432 [INFO] main_pipeline: High/Critical risk: 1701 customers
+2026-03-09 17:33:42,433 [INFO] main_pipeline: 
+============================================================
+2026-03-09 17:33:42,433 [INFO] main_pipeline: Pipeline complete in 19.2s
+2026-03-09 17:33:42,433 [INFO] main_pipeline: ============================================================
+2026-03-09 17:33:42,433 [INFO] main_pipeline: 
+Outputs:
+2026-03-09 17:33:42,433 [INFO] main_pipeline:   anomaly_detection.csv: 287.7 KB
+2026-03-09 17:33:42,433 [INFO] main_pipeline:   churn_features.csv: 251.7 KB
+2026-03-09 17:33:42,433 [INFO] main_pipeline:   churn_predictions.csv: 66.6 KB
+2026-03-09 17:33:42,433 [INFO] main_pipeline:   cohort_retention.csv: 4.1 KB
+2026-03-09 17:33:42,434 [INFO] main_pipeline:   forecast_backtest.csv: 2.3 KB
+2026-03-09 17:33:42,434 [INFO] main_pipeline:   master_dataset.csv: 3366.4 KB
+2026-03-09 17:33:42,434 [INFO] main_pipeline:   revenue_forecast.csv: 3.1 KB
+2026-03-09 17:33:42,434 [INFO] main_pipeline:   rfm_segments.csv: 282.4 KB
+2026-03-09 17:33:42,434 [INFO] main_pipeline: 
+Next steps:
+2026-03-09 17:33:42,434 [INFO] main_pipeline:   pip install dash plotly && python src/dashboard/app.py
+2026-03-09 17:33:42,434 [INFO] main_pipeline:   # OR
+2026-03-09 17:33:42,434 [INFO] main_pipeline:   pip install streamlit plotly && streamlit run src/dashboard/streamlit_app.py
+2026-03-09 17:50:05,064 [INFO] main_pipeline: 
+============================================================
+2026-03-09 17:50:05,149 [INFO] main_pipeline: E-Commerce Revenue Intelligence Pipeline - Full Run
+2026-03-09 17:50:05,149 [INFO] main_pipeline: ============================================================
+
+2026-03-09 17:50:05,149 [INFO] main_pipeline: ============================================================
+2026-03-09 17:50:05,151 [INFO] main_pipeline: LAYER 0: Data Ingestion
+2026-03-09 17:50:05,151 [INFO] main_pipeline: ============================================================
+2026-03-09 17:50:05,895 [INFO] pipeline.data_ingestion: Loaded 'orders': 15,000 rows × 8 cols
+2026-03-09 17:50:05,952 [INFO] pipeline.data_ingestion: Loaded 'customers': 3,000 rows × 6 cols
+2026-03-09 17:50:06,047 [INFO] pipeline.data_ingestion: Loaded 'order_items': 25,274 rows × 7 cols
+2026-03-09 17:50:06,116 [INFO] pipeline.data_ingestion: Loaded 'payments': 15,000 rows × 5 cols
+2026-03-09 17:50:06,228 [INFO] pipeline.data_ingestion: Loaded 'reviews': 11,963 rows × 7 cols
+2026-03-09 17:50:06,251 [INFO] pipeline.data_ingestion: Loaded 'products': 800 rows × 10 cols
+2026-03-09 17:50:06,259 [INFO] pipeline.data_ingestion: Loaded 'sellers': 400 rows × 5 cols
+2026-03-09 17:50:06,304 [INFO] pipeline.data_ingestion: Loaded 'geolocation': 5,000 rows × 5 cols
+2026-03-09 17:50:06,308 [INFO] pipeline.data_ingestion: Loaded 'category_translation': 15 rows × 2 cols
+2026-03-09 17:50:06,336 [INFO] pipeline.data_ingestion: Loaded 'daily_revenue': 972 rows × 7 cols
+2026-03-09 17:50:06,408 [INFO] pipeline.data_ingestion: Master dataset built: 15,000 rows × 29 cols
+2026-03-09 17:50:06,616 [INFO] pipeline.data_ingestion: Saved to D:\ecommerce_intelligence\data\processed\master_dataset.csv
+2026-03-09 17:50:06,660 [INFO] main_pipeline: Master dataset: (15000, 29)
+2026-03-09 17:50:06,663 [INFO] main_pipeline: ============================================================
+2026-03-09 17:50:06,663 [INFO] main_pipeline: LAYER 1: RFM Customer Segmentation
+2026-03-09 17:50:06,663 [INFO] main_pipeline: ============================================================
+2026-03-09 17:50:08,530 [INFO] models.rfm_segmentation: RFM computed for 2,942 customers
+2026-03-09 17:50:08,534 [INFO] models.rfm_segmentation: Segment distribution:
+segment
+Hibernating           485
+Lost                  392
+Champions             334
+Loyal Customers       257
+About to Sleep        251
+Need Attention        245
+Potential Loyalist    238
+At Risk               224
+Promising             189
+Cannot Lose           167
+New Customers         160
+Name: count, dtype: int64
+2026-03-09 17:50:12,884 [INFO] models.rfm_segmentation: Optimal k=2 (silhouette=0.380)
+2026-03-09 17:50:13,035 [INFO] models.rfm_segmentation: K-Means k=2 | Silhouette: 0.380
+2026-03-09 17:50:13,063 [INFO] models.rfm_segmentation: RFM saved to D:\ecommerce_intelligence\data\processed\rfm_segments.csv
+2026-03-09 17:50:13,073 [INFO] main_pipeline: 
+           segment  customer_count  avg_recency  avg_frequency  avg_monetary  total_revenue  avg_rfm  revenue_share
+         Champions             334        18.45           6.31       1245.69      416059.04     4.63           17.9
+   Loyal Customers             257        70.53           6.07       1245.14      320000.08     4.28           13.7
+           At Risk             224       143.61           6.12       1264.93      283344.20     3.94           12.2
+       Hibernating             485       398.34           2.76        547.41      265494.50     1.91           11.4
+       Cannot Lose             167       287.12           5.83       1197.96      200058.60     3.57            8.6
+Potential Loyalist             238        47.11           4.00        769.97      183253.86     3.52            7.9
+    Need Attention             245       150.73           3.54        716.60      175566.61     2.83            7.5
+              Lost             392       634.17           2.12        429.75      168462.84     1.45            7.2
+    About to Sleep             251       231.45           2.95        576.39      144675.00     2.31            6.2
+         Promising             189        72.40           2.46        504.38       95328.18     2.57            4.1
+     New Customers             160        19.29           2.43        481.26       77000.95     2.86            3.3
+2026-03-09 17:50:13,073 [INFO] main_pipeline: ============================================================
+2026-03-09 17:50:13,074 [INFO] main_pipeline: LAYER 2: Anomaly Detection | LAYER 5: Root Cause
+2026-03-09 17:50:13,074 [INFO] main_pipeline: ============================================================
+2026-03-09 17:50:13,379 [INFO] models.anomaly_detection: Anomaly detection complete: 15/972 days flagged (1.5%)
+2026-03-09 17:50:13,398 [INFO] main_pipeline: Anomalies detected: 15
+2026-03-09 17:50:13,398 [INFO] main_pipeline: Top anomaly: 2023-12-19 00:00:00 (type=spike, severity=critical)
+2026-03-09 17:50:13,552 [INFO] main_pipeline: Root cause for 2023-12-19:
+2026-03-09 17:50:13,553 [INFO] main_pipeline:   [customer_state] Top driver: RJ (d R$1640)
+2026-03-09 17:50:13,553 [INFO] main_pipeline:   [payment_type] Top driver: debit_card (d R$981)
+2026-03-09 17:50:13,553 [INFO] main_pipeline:   [product_category] Top driver: watches (d R$363)
+2026-03-09 17:50:13,556 [INFO] main_pipeline: ============================================================
+2026-03-09 17:50:13,557 [INFO] main_pipeline: LAYER 3: 30-Day Revenue Forecast (SARIMA + GBM)
+2026-03-09 17:50:13,558 [INFO] main_pipeline: ============================================================
+2026-03-09 17:50:13,569 [INFO] models.revenue_forecasting: Fitting SARIMA...
+2026-03-09 17:50:14,614 [INFO] models.revenue_forecasting: SARIMA fitted | AIC=16593.2
+2026-03-09 17:50:14,614 [INFO] models.revenue_forecasting: Fitting GBM...
+2026-03-09 17:50:18,240 [INFO] models.revenue_forecasting: GBM fitted | {'MAE': 669.3, 'RMSE': 2938.8, 'MAPE': 5.02}
+2026-03-09 17:50:18,243 [INFO] models.revenue_forecasting: Ensemble fitted.
+2026-03-09 17:50:18,730 [INFO] main_pipeline: Forecast next 7d: R$18,310
+2026-03-09 17:50:18,731 [INFO] main_pipeline: Forecast next 30d: R$81,720
+2026-03-09 17:50:19,591 [INFO] models.revenue_forecasting: SARIMA fitted | AIC=15913.1
+2026-03-09 17:50:23,278 [INFO] models.revenue_forecasting: GBM fitted | {'MAE': 222.73, 'RMSE': 652.52, 'MAPE': 12.9}
+2026-03-09 17:50:23,838 [INFO] models.revenue_forecasting:   sarima_forecast: MAE=1543 | MAPE=20.2%
+2026-03-09 17:50:23,839 [INFO] models.revenue_forecasting:   gbm_forecast: MAE=4515 | MAPE=83.2%
+2026-03-09 17:50:23,840 [INFO] models.revenue_forecasting:   ensemble_forecast: MAE=3288 | MAPE=56.9%
+2026-03-09 17:50:23,851 [INFO] main_pipeline: ============================================================
+2026-03-09 17:50:23,851 [INFO] main_pipeline: LAYER 4: Cohort Retention + Churn Prediction
+2026-03-09 17:50:23,851 [INFO] main_pipeline: ============================================================
+2026-03-09 17:50:23,958 [INFO] models.cohort_retention: Cohort retention matrix: (36, 36)
+2026-03-09 17:50:23,970 [INFO] models.cohort_retention: Retention matrix saved.
+2026-03-09 17:50:23,971 [INFO] models.cohort_retention: LTV matrix saved.
+2026-03-09 17:50:23,972 [INFO] main_pipeline: Cohort stats: {'total_cohorts': 36, 'avg_m1_retention_pct': 16.0, 'avg_m3_retention_pct': 13.6, 'avg_m6_retention_pct': 13.2, 'best_cohort_m1': '2023-11', 'worst_cohort_m1': '2022-02', 'avg_cohort_size': 83.0, 'total_customers': 2983}
+2026-03-09 17:50:24,294 [INFO] models.cohort_retention: Churn features: 2983 customers | Churned: 57.0%
+2026-03-09 17:50:24,499 [INFO] main_pipeline: 
+============================================================
+2026-03-09 17:50:24,499 [INFO] main_pipeline: E-Commerce Revenue Intelligence Pipeline - Full Run
+2026-03-09 17:50:24,499 [INFO] main_pipeline: ============================================================
+
+2026-03-09 17:50:24,499 [INFO] main_pipeline: ============================================================
+2026-03-09 17:50:24,499 [INFO] main_pipeline: LAYER 0: Data Ingestion
+2026-03-09 17:50:24,499 [INFO] main_pipeline: ============================================================
+2026-03-09 17:50:25,163 [INFO] pipeline.data_ingestion: Loaded 'orders': 15,000 rows × 8 cols
+2026-03-09 17:50:25,168 [INFO] pipeline.data_ingestion: Loaded 'customers': 3,000 rows × 6 cols
+2026-03-09 17:50:25,205 [INFO] pipeline.data_ingestion: Loaded 'order_items': 25,274 rows × 7 cols
+2026-03-09 17:50:25,218 [INFO] pipeline.data_ingestion: Loaded 'payments': 15,000 rows × 5 cols
+2026-03-09 17:50:25,253 [INFO] pipeline.data_ingestion: Loaded 'reviews': 11,963 rows × 7 cols
+2026-03-09 17:50:25,256 [INFO] pipeline.data_ingestion: Loaded 'products': 800 rows × 10 cols
+2026-03-09 17:50:25,258 [INFO] pipeline.data_ingestion: Loaded 'sellers': 400 rows × 5 cols
+2026-03-09 17:50:25,265 [INFO] pipeline.data_ingestion: Loaded 'geolocation': 5,000 rows × 5 cols
+2026-03-09 17:50:25,266 [INFO] pipeline.data_ingestion: Loaded 'category_translation': 15 rows × 2 cols
+2026-03-09 17:50:25,270 [INFO] pipeline.data_ingestion: Loaded 'daily_revenue': 972 rows × 7 cols
+2026-03-09 17:50:25,322 [INFO] pipeline.data_ingestion: Master dataset built: 15,000 rows × 29 cols
+2026-03-09 17:50:25,541 [INFO] pipeline.data_ingestion: Saved to D:\ecommerce_intelligence\data\processed\master_dataset.csv
+2026-03-09 17:50:25,576 [INFO] main_pipeline: Master dataset: (15000, 29)
+2026-03-09 17:50:25,577 [INFO] main_pipeline: ============================================================
+2026-03-09 17:50:25,577 [INFO] main_pipeline: LAYER 1: RFM Customer Segmentation
+2026-03-09 17:50:25,577 [INFO] main_pipeline: ============================================================
+2026-03-09 17:50:26,577 [INFO] models.rfm_segmentation: RFM computed for 2,942 customers
+2026-03-09 17:50:26,578 [INFO] models.rfm_segmentation: Segment distribution:
+segment
+Hibernating           485
+Lost                  392
+Champions             334
+Loyal Customers       257
+About to Sleep        251
+Need Attention        245
+Potential Loyalist    238
+At Risk               224
+Promising             189
+Cannot Lose           167
+New Customers         160
+Name: count, dtype: int64
+2026-03-09 17:50:27,216 [INFO] models.cohort_retention: Churn model: CV AUC=1.000 ± 0.000
+2026-03-09 17:50:27,217 [INFO] main_pipeline: Churn model: {'cv_auc_mean': 1.0, 'cv_auc_std': 0.0, 'churn_rate': 0.57}
+2026-03-09 17:50:27,230 [INFO] main_pipeline: High/Critical risk: 1701 customers
+2026-03-09 17:50:27,231 [INFO] main_pipeline: 
+============================================================
+2026-03-09 17:50:27,232 [INFO] main_pipeline: Pipeline complete in 22.2s
+2026-03-09 17:50:27,233 [INFO] main_pipeline: ============================================================
+2026-03-09 17:50:27,233 [INFO] main_pipeline: 
+Outputs:
+2026-03-09 17:50:27,234 [INFO] main_pipeline:   anomaly_detection.csv: 287.7 KB
+2026-03-09 17:50:27,234 [INFO] main_pipeline:   category_revenue.csv: 16.4 KB
+2026-03-09 17:50:27,234 [INFO] main_pipeline:   churn_features.csv: 251.7 KB
+2026-03-09 17:50:27,234 [INFO] main_pipeline:   churn_predictions.csv: 66.6 KB
+2026-03-09 17:50:27,234 [INFO] main_pipeline:   cohort_ltv.csv: 2.8 KB
+2026-03-09 17:50:27,235 [INFO] main_pipeline:   cohort_retention.csv: 4.1 KB
+2026-03-09 17:50:27,235 [INFO] main_pipeline:   forecast_backtest.csv: 2.3 KB
+2026-03-09 17:50:27,235 [INFO] main_pipeline:   master_dataset.csv: 3480.2 KB
+2026-03-09 17:50:27,235 [INFO] main_pipeline:   revenue_forecast.csv: 3.1 KB
+2026-03-09 17:50:27,235 [INFO] main_pipeline:   rfm_segments.csv: 285.3 KB
+2026-03-09 17:50:27,235 [INFO] main_pipeline: 
+Next steps:
+2026-03-09 17:50:27,235 [INFO] main_pipeline:   pip install dash plotly && python src/dashboard/app.py
+2026-03-09 17:50:27,235 [INFO] main_pipeline:   # OR
+2026-03-09 17:50:27,236 [INFO] main_pipeline:   pip install streamlit plotly && streamlit run src/dashboard/streamlit_app.py
+2026-03-09 17:50:29,636 [INFO] models.rfm_segmentation: Optimal k=2 (silhouette=0.380)
+2026-03-09 17:50:29,768 [INFO] models.rfm_segmentation: K-Means k=2 | Silhouette: 0.380
+2026-03-09 17:50:29,786 [INFO] models.rfm_segmentation: RFM saved to D:\ecommerce_intelligence\data\processed\rfm_segments.csv
+2026-03-09 17:50:29,794 [INFO] main_pipeline: 
+           segment  customer_count  avg_recency  avg_frequency  avg_monetary  total_revenue  avg_rfm  revenue_share
+         Champions             334        18.45           6.31       1245.69      416059.04     4.63           17.9
+   Loyal Customers             257        70.53           6.07       1245.14      320000.08     4.28           13.7
+           At Risk             224       143.61           6.12       1264.93      283344.20     3.94           12.2
+       Hibernating             485       398.34           2.76        547.41      265494.50     1.91           11.4
+       Cannot Lose             167       287.12           5.83       1197.96      200058.60     3.57            8.6
+Potential Loyalist             238        47.11           4.00        769.97      183253.86     3.52            7.9
+    Need Attention             245       150.73           3.54        716.60      175566.61     2.83            7.5
+              Lost             392       634.17           2.12        429.75      168462.84     1.45            7.2
+    About to Sleep             251       231.45           2.95        576.39      144675.00     2.31            6.2
+         Promising             189        72.40           2.46        504.38       95328.18     2.57            4.1
+     New Customers             160        19.29           2.43        481.26       77000.95     2.86            3.3
+2026-03-09 17:50:29,794 [INFO] main_pipeline: ============================================================
+2026-03-09 17:50:29,795 [INFO] main_pipeline: LAYER 2: Anomaly Detection | LAYER 5: Root Cause
+2026-03-09 17:50:29,795 [INFO] main_pipeline: ============================================================
+2026-03-09 17:50:30,058 [INFO] models.anomaly_detection: Anomaly detection complete: 15/972 days flagged (1.5%)
+2026-03-09 17:50:30,076 [INFO] main_pipeline: Anomalies detected: 15
+2026-03-09 17:50:30,076 [INFO] main_pipeline: Top anomaly: 2023-12-19 00:00:00 (type=spike, severity=critical)
+2026-03-09 17:50:30,215 [INFO] main_pipeline: Root cause for 2023-12-19:
+2026-03-09 17:50:30,215 [INFO] main_pipeline:   [customer_state] Top driver: RJ (d R$1640)
+2026-03-09 17:50:30,215 [INFO] main_pipeline:   [payment_type] Top driver: debit_card (d R$981)
+2026-03-09 17:50:30,216 [INFO] main_pipeline:   [product_category] Top driver: watches (d R$363)
+2026-03-09 17:50:30,219 [INFO] main_pipeline: ============================================================
+2026-03-09 17:50:30,219 [INFO] main_pipeline: LAYER 3: 30-Day Revenue Forecast (SARIMA + GBM)
+2026-03-09 17:50:30,219 [INFO] main_pipeline: ============================================================
+2026-03-09 17:50:30,224 [INFO] models.revenue_forecasting: Fitting SARIMA...
+2026-03-09 17:50:31,186 [INFO] models.revenue_forecasting: SARIMA fitted | AIC=16593.2
+2026-03-09 17:50:31,189 [INFO] models.revenue_forecasting: Fitting GBM...
+2026-03-09 17:59:59,347 [INFO] main_pipeline: 
+============================================================
+2026-03-09 17:59:59,347 [INFO] main_pipeline: E-Commerce Revenue Intelligence Pipeline - Full Run
+2026-03-09 17:59:59,347 [INFO] main_pipeline: ============================================================
+
+2026-03-09 17:59:59,348 [INFO] main_pipeline: ============================================================
+2026-03-09 17:59:59,348 [INFO] main_pipeline: LAYER 0: Data Ingestion
+2026-03-09 17:59:59,348 [INFO] main_pipeline: ============================================================
+2026-03-09 17:59:59,847 [INFO] pipeline.data_ingestion: Loaded 'orders': 15,000 rows × 8 cols
+2026-03-09 17:59:59,853 [INFO] pipeline.data_ingestion: Loaded 'customers': 3,000 rows × 6 cols
+2026-03-09 17:59:59,887 [INFO] pipeline.data_ingestion: Loaded 'order_items': 25,274 rows × 7 cols
+2026-03-09 17:59:59,897 [INFO] pipeline.data_ingestion: Loaded 'payments': 15,000 rows × 5 cols
+2026-03-09 17:59:59,923 [INFO] pipeline.data_ingestion: Loaded 'reviews': 11,963 rows × 7 cols
+2026-03-09 17:59:59,926 [INFO] pipeline.data_ingestion: Loaded 'products': 800 rows × 10 cols
+2026-03-09 17:59:59,928 [INFO] pipeline.data_ingestion: Loaded 'sellers': 400 rows × 5 cols
+2026-03-09 17:59:59,933 [INFO] pipeline.data_ingestion: Loaded 'geolocation': 5,000 rows × 5 cols
+2026-03-09 17:59:59,936 [INFO] pipeline.data_ingestion: Loaded 'category_translation': 15 rows × 2 cols
+2026-03-09 17:59:59,940 [INFO] pipeline.data_ingestion: Loaded 'daily_revenue': 972 rows × 7 cols
+2026-03-09 18:00:00,019 [INFO] pipeline.data_ingestion: Master dataset built: 15,000 rows × 29 cols
+2026-03-09 18:00:00,232 [INFO] pipeline.data_ingestion: Saved to D:\ecommerce_intelligence\data\processed\master_dataset.csv
+2026-03-09 18:00:00,275 [INFO] main_pipeline: Master dataset: (15000, 29)
+2026-03-09 18:00:00,278 [INFO] main_pipeline: ============================================================
+2026-03-09 18:00:00,278 [INFO] main_pipeline: LAYER 1: RFM Customer Segmentation
+2026-03-09 18:00:00,278 [INFO] main_pipeline: ============================================================
+2026-03-09 18:00:02,161 [INFO] models.rfm_segmentation: RFM computed for 2,942 customers
+2026-03-09 18:00:02,165 [INFO] models.rfm_segmentation: Segment distribution:
+segment
+Hibernating           485
+Lost                  392
+Champions             334
+Loyal Customers       257
+About to Sleep        251
+Need Attention        245
+Potential Loyalist    238
+At Risk               224
+Promising             189
+Cannot Lose           167
+New Customers         160
+Name: count, dtype: int64
+2026-03-09 18:00:05,821 [INFO] models.rfm_segmentation: Optimal k=2 (silhouette=0.380)
+2026-03-09 18:00:05,948 [INFO] models.rfm_segmentation: K-Means k=2 | Silhouette: 0.380
+2026-03-09 18:00:05,968 [INFO] models.rfm_segmentation: RFM saved to D:\ecommerce_intelligence\data\processed\rfm_segments.csv
+2026-03-09 18:00:05,978 [INFO] main_pipeline: 
+           segment  customer_count  avg_recency  avg_frequency  avg_monetary  total_revenue  avg_rfm  revenue_share
+         Champions             334        18.45           6.31       1245.69      416059.04     4.63           17.9
+   Loyal Customers             257        70.53           6.07       1245.14      320000.08     4.28           13.7
+           At Risk             224       143.61           6.12       1264.93      283344.20     3.94           12.2
+       Hibernating             485       398.34           2.76        547.41      265494.50     1.91           11.4
+       Cannot Lose             167       287.12           5.83       1197.96      200058.60     3.57            8.6
+Potential Loyalist             238        47.11           4.00        769.97      183253.86     3.52            7.9
+    Need Attention             245       150.73           3.54        716.60      175566.61     2.83            7.5
+              Lost             392       634.17           2.12        429.75      168462.84     1.45            7.2
+    About to Sleep             251       231.45           2.95        576.39      144675.00     2.31            6.2
+         Promising             189        72.40           2.46        504.38       95328.18     2.57            4.1
+     New Customers             160        19.29           2.43        481.26       77000.95     2.86            3.3
+2026-03-09 18:00:05,978 [INFO] main_pipeline: ============================================================
+2026-03-09 18:00:05,978 [INFO] main_pipeline: LAYER 2: Anomaly Detection | LAYER 5: Root Cause
+2026-03-09 18:00:05,978 [INFO] main_pipeline: ============================================================
+2026-03-09 18:00:06,266 [INFO] models.anomaly_detection: Anomaly detection complete: 15/972 days flagged (1.5%)
+2026-03-09 18:00:06,283 [INFO] main_pipeline: Anomalies detected: 15
+2026-03-09 18:00:06,284 [INFO] main_pipeline: Top anomaly: 2023-12-19 00:00:00 (type=spike, severity=critical)
+2026-03-09 18:00:06,416 [INFO] main_pipeline: Root cause for 2023-12-19:
+2026-03-09 18:00:06,417 [INFO] main_pipeline:   [customer_state] Top driver: RJ (d R$1640)
+2026-03-09 18:00:06,417 [INFO] main_pipeline:   [payment_type] Top driver: debit_card (d R$981)
+2026-03-09 18:00:06,417 [INFO] main_pipeline:   [product_category] Top driver: watches (d R$363)
+2026-03-09 18:00:06,422 [INFO] main_pipeline: ============================================================
+2026-03-09 18:00:06,423 [INFO] main_pipeline: LAYER 3: 30-Day Revenue Forecast (SARIMA + GBM)
+2026-03-09 18:00:06,423 [INFO] main_pipeline: ============================================================
+2026-03-09 18:00:06,430 [INFO] models.revenue_forecasting: Fitting SARIMA...
+2026-03-09 18:00:07,437 [INFO] models.revenue_forecasting: SARIMA fitted | AIC=16593.2
+2026-03-09 18:00:07,438 [INFO] models.revenue_forecasting: Fitting GBM...
+2026-03-09 18:00:10,887 [INFO] models.revenue_forecasting: GBM fitted | {'MAE': 669.3, 'RMSE': 2938.8, 'MAPE': 5.02}
+2026-03-09 18:00:10,889 [INFO] models.revenue_forecasting: Ensemble fitted.
+2026-03-09 18:00:11,371 [INFO] main_pipeline: Forecast next 7d: R$18,310
+2026-03-09 18:00:11,372 [INFO] main_pipeline: Forecast next 30d: R$81,720
+2026-03-09 18:00:12,239 [INFO] models.revenue_forecasting: SARIMA fitted | AIC=15913.1
+2026-03-09 18:00:15,707 [INFO] models.revenue_forecasting: GBM fitted | {'MAE': 222.73, 'RMSE': 652.52, 'MAPE': 12.9}
+2026-03-09 18:00:16,163 [INFO] models.revenue_forecasting:   sarima_forecast: MAE=1543 | MAPE=20.2%
+2026-03-09 18:00:16,164 [INFO] models.revenue_forecasting:   gbm_forecast: MAE=4515 | MAPE=83.2%
+2026-03-09 18:00:16,164 [INFO] models.revenue_forecasting:   ensemble_forecast: MAE=3288 | MAPE=56.9%
+2026-03-09 18:00:16,171 [INFO] main_pipeline: ============================================================
+2026-03-09 18:00:16,171 [INFO] main_pipeline: LAYER 4: Cohort Retention + Churn Prediction
+2026-03-09 18:00:16,171 [INFO] main_pipeline: ============================================================
+2026-03-09 18:00:16,267 [INFO] models.cohort_retention: Cohort retention matrix: (36, 36)
+2026-03-09 18:00:16,278 [INFO] models.cohort_retention: Retention matrix saved.
+2026-03-09 18:00:16,280 [INFO] models.cohort_retention: LTV matrix saved.
+2026-03-09 18:00:16,281 [INFO] main_pipeline: Cohort stats: {'total_cohorts': 36, 'avg_m1_retention_pct': 16.0, 'avg_m3_retention_pct': 13.6, 'avg_m6_retention_pct': 13.2, 'best_cohort_m1': '2023-11', 'worst_cohort_m1': '2022-02', 'avg_cohort_size': 83.0, 'total_customers': 2983}
+2026-03-09 18:00:16,593 [INFO] models.cohort_retention: Churn features: 2983 customers | Churned: 57.0%
+2026-03-09 18:00:18,920 [INFO] models.cohort_retention: Churn model: CV AUC=1.000 ± 0.000
+2026-03-09 18:00:18,920 [INFO] main_pipeline: Churn model: {'cv_auc_mean': 1.0, 'cv_auc_std': 0.0, 'churn_rate': 0.57}
+2026-03-09 18:00:18,931 [INFO] main_pipeline: High/Critical risk: 1701 customers
+2026-03-09 18:00:18,931 [INFO] main_pipeline: 
+============================================================
+2026-03-09 18:00:18,932 [INFO] main_pipeline: Pipeline complete in 19.6s
+2026-03-09 18:00:18,932 [INFO] main_pipeline: ============================================================
+2026-03-09 18:00:18,932 [INFO] main_pipeline: 
+Outputs:
+2026-03-09 18:00:18,933 [INFO] main_pipeline:   anomaly_detection.csv: 287.7 KB
+2026-03-09 18:00:18,933 [INFO] main_pipeline:   category_revenue.csv: 16.4 KB
+2026-03-09 18:00:18,933 [INFO] main_pipeline:   churn_features.csv: 251.7 KB
+2026-03-09 18:00:18,933 [INFO] main_pipeline:   churn_predictions.csv: 66.6 KB
+2026-03-09 18:00:18,934 [INFO] main_pipeline:   cohort_ltv.csv: 2.8 KB
+2026-03-09 18:00:18,934 [INFO] main_pipeline:   cohort_retention.csv: 4.1 KB
+2026-03-09 18:00:18,934 [INFO] main_pipeline:   forecast_backtest.csv: 2.3 KB
+2026-03-09 18:00:18,934 [INFO] main_pipeline:   master_dataset.csv: 3480.2 KB
+2026-03-09 18:00:18,935 [INFO] main_pipeline:   revenue_forecast.csv: 3.1 KB
+2026-03-09 18:00:18,935 [INFO] main_pipeline:   rfm_segments.csv: 285.3 KB
+2026-03-09 18:00:18,935 [INFO] main_pipeline: 
+Next steps:
+2026-03-09 18:00:18,935 [INFO] main_pipeline:   pip install dash plotly && python src/dashboard/app.py
+2026-03-09 18:00:18,936 [INFO] main_pipeline:   # OR
+2026-03-09 18:00:18,936 [INFO] main_pipeline:   pip install streamlit plotly && streamlit run src/dashboard/streamlit_app.py
+2026-03-09 18:30:31,055 [INFO] main_pipeline: 
+============================================================
+2026-03-09 18:30:32,544 [INFO] main_pipeline: E-Commerce Revenue Intelligence Pipeline - Full Run
+2026-03-09 18:30:32,544 [INFO] main_pipeline: ============================================================
+
+2026-03-09 18:30:32,544 [INFO] main_pipeline: ============================================================
+2026-03-09 18:30:32,544 [INFO] main_pipeline: LAYER 0: Data Ingestion
+2026-03-09 18:30:32,544 [INFO] main_pipeline: ============================================================
+2026-03-09 18:30:33,449 [INFO] pipeline.data_ingestion: Loaded 'orders': 15,000 rows × 8 cols
+2026-03-09 18:30:33,499 [INFO] pipeline.data_ingestion: Loaded 'customers': 3,000 rows × 6 cols
+2026-03-09 18:30:33,638 [INFO] pipeline.data_ingestion: Loaded 'order_items': 25,274 rows × 7 cols
+2026-03-09 18:30:33,654 [INFO] pipeline.data_ingestion: Loaded 'payments': 15,000 rows × 5 cols
+2026-03-09 18:30:33,686 [INFO] pipeline.data_ingestion: Loaded 'reviews': 11,963 rows × 7 cols
+2026-03-09 18:30:33,704 [INFO] pipeline.data_ingestion: Loaded 'products': 800 rows × 10 cols
+2026-03-09 18:30:33,722 [INFO] pipeline.data_ingestion: Loaded 'sellers': 400 rows × 5 cols
+2026-03-09 18:30:33,766 [INFO] pipeline.data_ingestion: Loaded 'geolocation': 5,000 rows × 5 cols
+2026-03-09 18:30:33,782 [INFO] pipeline.data_ingestion: Loaded 'category_translation': 15 rows × 2 cols
+2026-03-09 18:30:33,793 [INFO] pipeline.data_ingestion: Loaded 'daily_revenue': 972 rows × 7 cols
+2026-03-09 18:30:33,897 [INFO] pipeline.data_ingestion: Master dataset built: 15,000 rows × 29 cols
+2026-03-09 18:30:34,228 [INFO] pipeline.data_ingestion: Saved to D:\ecommerce_intelligence\data\processed\master_dataset.csv
+2026-03-09 18:30:34,309 [INFO] main_pipeline: Master dataset: (15000, 29)
+2026-03-09 18:30:34,309 [INFO] main_pipeline: ============================================================
+2026-03-09 18:30:34,309 [INFO] main_pipeline: LAYER 1: RFM Customer Segmentation
+2026-03-09 18:30:34,309 [INFO] main_pipeline: ============================================================
+2026-03-09 18:30:36,771 [INFO] models.rfm_segmentation: RFM computed for 2,942 customers
+2026-03-09 18:30:36,773 [INFO] models.rfm_segmentation: Segment distribution:
+segment
+Hibernating           485
+Lost                  392
+Champions             334
+Loyal Customers       257
+About to Sleep        251
+Need Attention        245
+Potential Loyalist    238
+At Risk               224
+Promising             189
+Cannot Lose           167
+New Customers         160
+Name: count, dtype: int64
+2026-03-09 18:30:43,059 [INFO] models.rfm_segmentation: Optimal k=2 (silhouette=0.380)
+2026-03-09 18:30:43,464 [INFO] models.rfm_segmentation: K-Means k=2 | Silhouette: 0.380
+2026-03-09 18:30:43,544 [INFO] models.rfm_segmentation: RFM saved to D:\ecommerce_intelligence\data\processed\rfm_segments.csv
+2026-03-09 18:30:43,578 [INFO] main_pipeline: 
+           segment  customer_count  avg_recency  avg_frequency  avg_monetary  total_revenue  avg_rfm  revenue_share
+         Champions             334        18.45           6.31       1245.69      416059.04     4.63           17.9
+   Loyal Customers             257        70.53           6.07       1245.14      320000.08     4.28           13.7
+           At Risk             224       143.61           6.12       1264.93      283344.20     3.94           12.2
+       Hibernating             485       398.34           2.76        547.41      265494.50     1.91           11.4
+       Cannot Lose             167       287.12           5.83       1197.96      200058.60     3.57            8.6
+Potential Loyalist             238        47.11           4.00        769.97      183253.86     3.52            7.9
+    Need Attention             245       150.73           3.54        716.60      175566.61     2.83            7.5
+              Lost             392       634.17           2.12        429.75      168462.84     1.45            7.2
+    About to Sleep             251       231.45           2.95        576.39      144675.00     2.31            6.2
+         Promising             189        72.40           2.46        504.38       95328.18     2.57            4.1
+     New Customers             160        19.29           2.43        481.26       77000.95     2.86            3.3
+2026-03-09 18:30:43,578 [INFO] main_pipeline: ============================================================
+2026-03-09 18:30:43,578 [INFO] main_pipeline: LAYER 2: Anomaly Detection | LAYER 5: Root Cause
+2026-03-09 18:30:43,578 [INFO] main_pipeline: ============================================================
+2026-03-09 18:30:44,781 [INFO] models.anomaly_detection: Anomaly detection complete: 15/972 days flagged (1.5%)
+2026-03-09 18:30:44,848 [INFO] main_pipeline: Anomalies detected: 15
+2026-03-09 18:30:44,855 [INFO] main_pipeline: Top anomaly: 2023-12-19 00:00:00 (type=spike, severity=critical)
+2026-03-09 18:30:45,376 [INFO] main_pipeline: Root cause for 2023-12-19:
+2026-03-09 18:30:45,377 [INFO] main_pipeline:   [customer_state] Top driver: RJ (d R$1640)
+2026-03-09 18:30:45,378 [INFO] main_pipeline:   [payment_type] Top driver: debit_card (d R$981)
+2026-03-09 18:30:45,378 [INFO] main_pipeline:   [product_category] Top driver: watches (d R$363)
+2026-03-09 18:30:45,388 [INFO] main_pipeline: ============================================================
+2026-03-09 18:30:45,388 [INFO] main_pipeline: LAYER 3: 30-Day Revenue Forecast (SARIMA + GBM)
+2026-03-09 18:30:45,388 [INFO] main_pipeline: ============================================================
+2026-03-09 18:30:45,498 [INFO] models.revenue_forecasting: Fitting SARIMA...
+2026-03-09 18:30:49,444 [INFO] models.revenue_forecasting: SARIMA fitted | AIC=16593.2
+2026-03-09 18:30:49,444 [INFO] models.revenue_forecasting: Fitting GBM...
+2026-03-09 18:31:00,474 [INFO] models.revenue_forecasting: GBM fitted | {'MAE': 669.3, 'RMSE': 2938.8, 'MAPE': 5.02}
+2026-03-09 18:31:00,490 [INFO] models.revenue_forecasting: Ensemble fitted.
+2026-03-09 18:31:01,180 [INFO] main_pipeline: Forecast next 7d: R$18,310
+2026-03-09 18:31:01,182 [INFO] main_pipeline: Forecast next 30d: R$81,720
+2026-03-09 18:31:02,377 [INFO] models.revenue_forecasting: SARIMA fitted | AIC=15913.1
+2026-03-09 18:31:07,056 [INFO] models.revenue_forecasting: GBM fitted | {'MAE': 222.73, 'RMSE': 652.52, 'MAPE': 12.9}
+2026-03-09 18:31:07,645 [INFO] models.revenue_forecasting:   sarima_forecast: MAE=1543 | MAPE=20.2%
+2026-03-09 18:31:07,661 [INFO] models.revenue_forecasting:   gbm_forecast: MAE=4515 | MAPE=83.2%
+2026-03-09 18:31:07,661 [INFO] models.revenue_forecasting:   ensemble_forecast: MAE=3288 | MAPE=56.9%
+2026-03-09 18:31:07,672 [INFO] main_pipeline: ============================================================
+2026-03-09 18:31:07,672 [INFO] main_pipeline: LAYER 4: Cohort Retention + Churn Prediction
+2026-03-09 18:31:07,672 [INFO] main_pipeline: ============================================================
+2026-03-09 18:31:07,902 [INFO] models.cohort_retention: Cohort retention matrix: (36, 36)
+2026-03-09 18:31:07,918 [INFO] models.cohort_retention: Retention matrix saved.
+2026-03-09 18:31:07,918 [INFO] models.cohort_retention: LTV matrix saved.
+2026-03-09 18:31:07,918 [INFO] main_pipeline: Cohort stats: {'total_cohorts': 36, 'avg_m1_retention_pct': 16.0, 'avg_m3_retention_pct': 13.6, 'avg_m6_retention_pct': 13.2, 'best_cohort_m1': '2023-11', 'worst_cohort_m1': '2022-02', 'avg_cohort_size': 83.0, 'total_customers': 2983}
+2026-03-09 18:31:08,392 [INFO] models.cohort_retention: Churn features: 2983 customers | Churned: 57.0%
+2026-03-09 18:31:11,608 [INFO] models.cohort_retention: Churn model: CV AUC=1.000 ± 0.000
+2026-03-09 18:31:11,608 [INFO] main_pipeline: Churn model: {'cv_auc_mean': 1.0, 'cv_auc_std': 0.0, 'churn_rate': 0.57}
+2026-03-09 18:31:11,620 [INFO] main_pipeline: High/Critical risk: 1701 customers
+2026-03-09 18:31:11,625 [INFO] main_pipeline: 
+============================================================
+2026-03-09 18:31:11,625 [INFO] main_pipeline: Pipeline complete in 40.6s
+2026-03-09 18:31:11,625 [INFO] main_pipeline: ============================================================
+2026-03-09 18:31:11,625 [INFO] main_pipeline: 
+Outputs:
+2026-03-09 18:31:11,625 [INFO] main_pipeline:   anomaly_detection.csv: 287.7 KB
+2026-03-09 18:31:11,625 [INFO] main_pipeline:   category_revenue.csv: 16.4 KB
+2026-03-09 18:31:11,625 [INFO] main_pipeline:   churn_features.csv: 251.7 KB
+2026-03-09 18:31:11,625 [INFO] main_pipeline:   churn_predictions.csv: 66.6 KB
+2026-03-09 18:31:11,625 [INFO] main_pipeline:   cohort_ltv.csv: 2.8 KB
+2026-03-09 18:31:11,625 [INFO] main_pipeline:   cohort_retention.csv: 4.1 KB
+2026-03-09 18:31:11,625 [INFO] main_pipeline:   forecast_backtest.csv: 2.3 KB
+2026-03-09 18:31:11,625 [INFO] main_pipeline:   master_dataset.csv: 3480.2 KB
+2026-03-09 18:31:11,625 [INFO] main_pipeline:   revenue_forecast.csv: 3.1 KB
+2026-03-09 18:31:11,625 [INFO] main_pipeline:   rfm_segments.csv: 285.3 KB
+2026-03-09 18:31:11,625 [INFO] main_pipeline: 
+Next steps:
+2026-03-09 18:31:11,625 [INFO] main_pipeline:   pip install dash plotly && python src/dashboard/app.py
+2026-03-09 18:31:11,625 [INFO] main_pipeline:   # OR
+2026-03-09 18:31:11,625 [INFO] main_pipeline:   pip install streamlit plotly && streamlit run src/dashboard/streamlit_app.py

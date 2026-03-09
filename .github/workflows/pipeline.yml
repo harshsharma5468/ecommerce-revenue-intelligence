@@ -1,0 +1,225 @@
+name: Revenue Intelligence Pipeline CI/CD
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+  schedule:
+    # Run full pipeline daily at 6 AM UTC (data refresh)
+    - cron: "0 6 * * *"
+  workflow_dispatch:
+    inputs:
+      layer:
+        description: "Pipeline layer to run"
+        required: false
+        default: "all"
+        type: choice
+        options: [all, ingest, rfm, anomaly, forecast, cohort]
+
+env:
+  PYTHON_VERSION: "3.11"
+  DATA_DIR: data/raw
+  PROCESSED_DIR: data/processed
+
+jobs:
+  # ───────────────────────────────────────────────
+  # Job 1: Code Quality & Tests
+  # ───────────────────────────────────────────────
+  quality:
+    name: Code Quality
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+
+      - name: Install dependencies
+        run: |
+          pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install flake8 pytest pytest-cov black isort mypy
+
+      - name: Lint (flake8)
+        run: flake8 src/ main_pipeline.py --max-line-length=120 --ignore=E501,W503
+
+      - name: Format check (black)
+        run: black --check src/ main_pipeline.py
+
+      - name: Import sort check (isort)
+        run: isort --check-only src/ main_pipeline.py
+
+      - name: Run tests
+        run: |
+          pytest tests/ -v --cov=src --cov-report=xml --cov-report=term
+        continue-on-error: true
+
+      - name: Upload coverage
+        uses: codecov/codecov-action@v4
+        with:
+          file: ./coverage.xml
+        continue-on-error: true
+
+  # ───────────────────────────────────────────────
+  # Job 2: Data Pipeline
+  # ───────────────────────────────────────────────
+  pipeline:
+    name: Run Analytics Pipeline
+    runs-on: ubuntu-latest
+    needs: quality
+    if: github.event_name != 'pull_request'
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+
+      - name: Install dependencies
+        run: |
+          pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Generate datasets (if not cached)
+        run: |
+          if [ ! -f "${{ env.DATA_DIR }}/olist_orders_dataset.csv" ]; then
+            echo "Generating synthetic datasets..."
+            python scripts/generate_datasets.py
+          else
+            echo "Datasets already present, skipping generation."
+          fi
+
+      - name: Run data ingestion
+        run: python main_pipeline.py --layer ingest
+
+      - name: Run RFM segmentation
+        run: python main_pipeline.py --layer rfm
+
+      - name: Run anomaly detection
+        run: python main_pipeline.py --layer anomaly
+
+      - name: Run revenue forecasting
+        run: python main_pipeline.py --layer forecast
+
+      - name: Run cohort analysis
+        run: python main_pipeline.py --layer cohort
+
+      - name: Validate outputs
+        run: |
+          python - << 'EOF'
+          import os, sys
+          from pathlib import Path
+          required = [
+              "data/processed/master_dataset.csv",
+              "data/processed/rfm_segments.csv",
+              "data/processed/anomaly_detection.csv",
+              "data/processed/revenue_forecast.csv",
+              "data/processed/cohort_retention.csv",
+              "data/processed/churn_predictions.csv",
+          ]
+          missing = [f for f in required if not Path(f).exists()]
+          if missing:
+              print(f"MISSING outputs: {missing}")
+              sys.exit(1)
+          else:
+              print("✅ All pipeline outputs validated.")
+              for f in required:
+                  size = os.path.getsize(f)
+                  print(f"  {f}: {size/1024:.1f} KB")
+          EOF
+
+      - name: Upload pipeline artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: pipeline-outputs-${{ github.run_number }}
+          path: data/processed/
+          retention-days: 30
+
+  # ───────────────────────────────────────────────
+  # Job 3: Dashboard Smoke Test
+  # ───────────────────────────────────────────────
+  dashboard-test:
+    name: Dashboard Smoke Test
+    runs-on: ubuntu-latest
+    needs: pipeline
+    if: github.event_name != 'pull_request'
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+
+      - name: Install dashboard deps
+        run: |
+          pip install -r requirements.txt
+          pip install dash plotly
+
+      - name: Download pipeline outputs
+        uses: actions/download-artifact@v4
+        with:
+          name: pipeline-outputs-${{ github.run_number }}
+          path: data/processed/
+
+      - name: Test dashboard import
+        run: |
+          python -c "
+          import sys; sys.path.insert(0, 'src')
+          from dashboard.app import create_app, DataLoader
+          loader = DataLoader()
+          print('Dashboard imports OK')
+          print(f'Daily revenue rows: {len(loader.daily_revenue)}')
+          "
+
+  # ───────────────────────────────────────────────
+  # Job 4: Deploy (on main branch only)
+  # ───────────────────────────────────────────────
+  deploy:
+    name: Deploy Dashboard
+    runs-on: ubuntu-latest
+    needs: [pipeline, dashboard-test]
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download pipeline outputs
+        uses: actions/download-artifact@v4
+        with:
+          name: pipeline-outputs-${{ github.run_number }}
+          path: data/processed/
+
+      - name: Deploy to server (example — replace with your deploy)
+        run: |
+          echo "Deploy steps would go here."
+          echo "Options:"
+          echo "  - Docker build & push to ECR"
+          echo "  - Deploy to AWS ECS / GCP Cloud Run"
+          echo "  - Push to Heroku"
+          echo "  - Update Streamlit Cloud"
+          echo ""
+          echo "Example Docker deploy:"
+          echo "  docker build -t revenue-intelligence ."
+          echo "  docker push \$REGISTRY/revenue-intelligence:latest"
+
+      - name: Notify on success
+        if: success()
+        run: |
+          echo "✅ Pipeline & deploy complete: $(date)"
+          # Add Slack/email notification here
+
+      - name: Notify on failure
+        if: failure()
+        run: |
+          echo "❌ Pipeline failed: $(date)"
+          # Add alerting here

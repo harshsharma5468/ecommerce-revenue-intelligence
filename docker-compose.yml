@@ -1,0 +1,109 @@
+version: '3.8'
+
+services:
+  # Main Application
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: production
+    ports:
+      - "8050:8050"
+    volumes:
+      - ./data:/app/data
+      - ./logs:/app/logs
+    environment:
+      - DATABASE_URL=sqlite:///data/ecommerce.db
+      - SECRET_KEY=${SECRET_KEY:-change-me-in-production}
+      - DEBUG=false
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8050"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - ecommerce-network
+
+  # PostgreSQL Database (optional, for production)
+  postgres:
+    image: postgres:15-alpine
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_DB=ecommerce
+      - POSTGRES_USER=ecommerce_user
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-secure_password}
+    ports:
+      - "5432:5432"
+    restart: unless-stopped
+    networks:
+      - ecommerce-network
+    profiles:
+      - production
+
+  # Redis for caching and session management
+  redis:
+    image: redis:7-alpine
+    volumes:
+      - redis_data:/data
+    ports:
+      - "6379:6379"
+    restart: unless-stopped
+    networks:
+      - ecommerce-network
+    profiles:
+      - production
+
+  # Pipeline Scheduler (runs daily)
+  scheduler:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: production
+    volumes:
+      - ./data:/app/data
+      - ./logs:/app/logs
+    environment:
+      - DATABASE_URL=sqlite:///data/ecommerce.db
+    command: >
+      sh -c "while true; do
+        python main_pipeline.py;
+        sleep 86400;
+      done"
+    restart: unless-stopped
+    depends_on:
+      - app
+    networks:
+      - ecommerce-network
+    profiles:
+      - production
+
+  # Streamlit Dashboard (alternative UI)
+  streamlit:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: production
+    ports:
+      - "8501:8501"
+    volumes:
+      - ./data:/app/data
+    environment:
+      - DATABASE_URL=sqlite:///data/ecommerce.db
+    command: streamlit run src/dashboard/streamlit_app.py --server.port=8501 --server.address=0.0.0.0
+    restart: unless-stopped
+    depends_on:
+      - app
+    networks:
+      - ecommerce-network
+    profiles:
+      - extra
+
+volumes:
+  postgres_data:
+  redis_data:
+
+networks:
+  ecommerce-network:
+    driver: bridge
