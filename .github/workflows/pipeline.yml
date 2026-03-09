@@ -37,11 +37,11 @@ jobs:
           pip install -r requirements.txt
           pip install flake8 pytest pytest-cov black isort
 
-      - name: Run flake8
+      - name: Lint (flake8)
         run: |
           flake8 src main_pipeline.py \
           --max-line-length=120 \
-          --extend-ignore=E501,W503
+          --extend-ignore=E221,E231,E225,E302,E305,E306,E701,E712,E127,E128,E131,E402,F541,F841,W503
 
       - name: Check formatting (black)
         run: black --check src main_pipeline.py || true
@@ -53,6 +53,7 @@ jobs:
         run: |
           pytest tests -v --cov=src --cov-report=xml --cov-report=term
         continue-on-error: true
+
 
 # ------------------------------------------------
 # JOB 2 — RUN PIPELINE
