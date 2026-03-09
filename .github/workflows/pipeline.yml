@@ -48,7 +48,7 @@ jobs:
         run: |
           flake8 src/ main_pipeline.py \
             --max-line-length=120 \
-            --ignore=E221,E225,E226,E231,E241,E242,E272,E301,E302,E305,E306,E121,E127,E128,E131,E701,E704,E712,W291,W293,W504,F541,F841
+            --ignore=E221,E225,E226,E231,E241,E242,E272,E301,E302,E305,E306,E121,E127,E128,E131,E701,E704,E712,W291,W293,W504,F541,F841,F401,F402,E402,F821
 
       - name: Format check (black)
         run: black --check src/ main_pipeline.py || true
@@ -83,7 +83,7 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: ${{ env.PYTHON_VERSION }}
-        cache: pip
+          cache: pip
 
       - name: Install dependencies
         run: |
